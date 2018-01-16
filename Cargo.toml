@@ -1,0 +1,8 @@
+[package]
+name = "hilbert_qexp"
+version = "0.1.0"
+authors = ["Sho Takemori <stakemorii@gmail.com>"]
+
+[dependencies]
+flint = { git = "https://github.com/stakemori/flint-rust.git"}
+libc = "0.2"
