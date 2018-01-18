@@ -1,6 +1,6 @@
 use std;
 use std::fmt;
-use misc::{pow_mut, PowGen};
+use misc::{pow_mut, PowGen, int_sqrt};
 use libc::{c_ulong, c_long};
 use std::ops::{AddAssign, MulAssign, DivAssign, SubAssign, ShlAssign, ShrAssign, Mul, Sub, Neg,
                Add};
@@ -11,7 +11,7 @@ use std::convert::From;
 use fcvec;
 
 type Weight = Option<(usize, usize)>;
-/// struct for hilbert modualr form over Q(sqrt(5))
+/// struct for hilbert modualr form over Q(sqrt(m))
 /// this corresponds finite sum of the q-expansion of the form
 /// Σ a(u, v) exp(2piTr 1/sqrt(5) (u + v * sqrt(5))/2)
 /// where v <= prec.
@@ -23,6 +23,8 @@ pub struct HmfGen<T> {
     pub weight: Weight,
     // vth element of u_bds.vec is (sqrt(5) * v).floor()
     pub u_bds: UBounds,
+    // Square free positive integer.
+    pub m: u64,
 }
 
 
@@ -31,28 +33,21 @@ macro_rules! is_even {
 }
 
 macro_rules! u_iter {
-    ($v: expr, $bd: ident) => {
+    ($m: expr, $v: expr, $bd: ident) => {
         {
-            (-$bd..($bd+1)).filter(|&x| is_even!(x+$v))
-        }
-    }
-}
-
-macro_rules! u_iter_pos {
-    ($v: expr, $bd: ident) => {
-        {
-            (1..($bd+1)).filter(|&x| is_even!(x+$v))
+            (-$bd..($bd+1)).filter(|&x| $m & 0b11 != 1 || is_even!(x+$v))
         }
     }
 }
 
 macro_rules! v_u_bd_iter {
-    (($u_bds: expr, $v: ident, $u: ident, $bd: ident) $body:expr) =>
+    (($m: expr, $u_bds: expr, $v: ident, $u: ident, $bd: ident) $body:expr) =>
     {
         for ($v, &$bd) in $u_bds.vec.iter().enumerate() {
             let $bd = $bd as i64;
             let v_i64 = $v as i64;
-            for $u in u_iter!(v_i64, $bd) {
+            let m = $m;
+            for $u in u_iter!(m, v_i64, $bd) {
                 $body
             }
         };
@@ -60,12 +55,13 @@ macro_rules! v_u_bd_iter {
 }
 
 macro_rules! v_u_bd_iter_non_const {
-    (($u_bds: expr, $v: ident, $u: ident, $bd: ident) $body:expr) =>
+    (($m: expr, $u_bds: expr, $v: ident, $u: ident, $bd: ident) $body:expr) =>
     {
         for ($v, &$bd) in $u_bds.vec.iter().enumerate().skip(1) {
             let $bd = $bd as i64;
             let v_i64 = $v as i64;
-            for $u in u_iter!(v_i64, $bd) {
+            let m = $m;
+            for $u in u_iter!(m, v_i64, $bd) {
                 $body
             }
         };
@@ -78,7 +74,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut vec = Vec::new();
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             let a = self.fcvec.fc_ref(v, u, bd);
             if !a.is_zero_g() {
                 vec.push(format!("({}, {}): {}", u, v, a));
@@ -159,13 +155,11 @@ pub struct UBounds {
 }
 
 impl UBounds {
-    pub fn new(prec: usize) -> UBounds {
-        assert!(5 * prec * prec < std::usize::MAX);
-        assert!(prec < std::i64::MAX as usize);
+    // m is a square free positive integer.
+    pub fn new(m: u64, prec: usize) -> UBounds {
         let mut u_bds = Vec::new();
-        let sqrt5 = 5_f64.sqrt();
         for v in 0..(prec + 1) {
-            u_bds.push((sqrt5 * v as f64).floor() as usize);
+            u_bds.push(int_sqrt(m * v as u64) as usize);
         }
         UBounds { vec: u_bds }
     }
@@ -182,7 +176,7 @@ where
     for<'a> T: AddAssign<&'a T>,
 {
     fn set_one(&mut self) {
-        v_u_bd_iter_non_const!((self.u_bds, v, u, bd) {
+        v_u_bd_iter_non_const!((self.m, self.u_bds, v, u, bd) {
             self.fcvec.fc_ref_mut(v, u, bd).set_ui_g(0);
         });
         self.fcvec.fc_ref_mut(0, 0, 0).set_ui_g(1);
@@ -193,8 +187,8 @@ where
         let f = self.clone();
         self.weight = weight_pow(self.weight, 2);
         let mut tmp = T::from_ui_g(0);
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
-            _mul_mut_tmp(&mut tmp, u, v, &f.fcvec, &f.fcvec, &self.u_bds);
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
+            _mul_mut_tmp(&mut tmp, u, v, &f.fcvec, &f.fcvec, &self.u_bds, self.m);
             self.fcvec.fc_ref_mut(v, u, bd).set_g(&tmp);
             })
     }
@@ -228,6 +222,7 @@ where
             weight: f.weight,
             prec: f.prec,
             u_bds: u_bds,
+            m: f.m,
         }
     }
 }
@@ -252,6 +247,7 @@ where
             prec: self.prec,
             fcvec: self.fcvec.rt_part(),
             u_bds: self.u_bds.clone(),
+            m: self.m,
         }
     }
 
@@ -261,6 +257,7 @@ where
             prec: self.prec,
             fcvec: self.fcvec.ir_part(),
             u_bds: self.u_bds.clone(),
+            m: self.m,
         }
     }
 }
@@ -270,14 +267,15 @@ where
     T: BigNumber,
 {
     /// Return 0 q-expantion
-    pub fn new(prec: usize) -> HmfGen<T> {
-        let u_bds = UBounds::new(prec);
+    pub fn new(m: u64, prec: usize) -> HmfGen<T> {
+        let u_bds = UBounds::new(m, prec);
         let fcvec = FcVec::new(&u_bds);
         HmfGen {
             weight: None,
             prec: prec,
             fcvec: fcvec,
             u_bds: u_bds,
+            m: m,
         }
     }
 
@@ -288,8 +286,8 @@ where
         self.prec = prec;
     }
 
-    pub fn one(prec: usize) -> HmfGen<T> {
-        let mut f = Self::new(prec);
+    pub fn one(m: u64, prec: usize) -> HmfGen<T> {
+        let mut f = Self::new(m, prec);
         f.fcvec.fc_ref_mut(0, 0, 0).set_ui_g(1);
         f
     }
@@ -299,7 +297,7 @@ where
         let prec = min(f1.prec, f2.prec);
         self.decrease_prec(prec);
         self.weight = weight_add(f1.weight, f2.weight);
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             T::add_mut_g(
                 self.fcvec.fc_ref_mut(v, u, bd),
                 f1.fcvec.fc_ref(v, u, bd),
@@ -311,7 +309,7 @@ where
     pub fn is_divisible_by_const(&self, a: &T) -> bool {
         let mut tmpelt = T::new_g();
         let mut tmp = Fmpz::new();
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             if !self.fcvec.fc_ref(v, u, bd).is_multiple_of_g(
                 a,
                 &mut tmpelt,
@@ -327,7 +325,7 @@ where
         let prec = min(f1.prec, f2.prec);
         self.decrease_prec(prec);
         self.weight = weight_add(f1.weight, f2.weight);
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             T::sub_mut_g(
                 self.fcvec.fc_ref_mut(v, u, bd),
                 f1.fcvec.fc_ref(v, u, bd),
@@ -345,8 +343,8 @@ where
         let prec = min(f1.prec, f2.prec);
         self.decrease_prec(prec);
         self.weight = weight_mul(f1.weight, f2.weight);
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
-            _mul_mut_tmp(&mut tmp, u, v, &f1.fcvec, &f2.fcvec, &self.u_bds);
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
+            _mul_mut_tmp(&mut tmp, u, v, &f1.fcvec, &f2.fcvec, &self.u_bds, self.m);
             self.fcvec.fc_ref_mut(v, u, bd).set_g(&tmp);
         })
     }
@@ -354,7 +352,7 @@ where
     /// self = f * a
     pub fn mul_mut_by_const(&mut self, f: &HmfGen<T>, a: &T) {
         self.weight = f.weight;
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             T::mul_mut_g(self.fcvec.fc_ref_mut(v, u, bd), f.fcvec.fc_ref(v, u, bd), a)
             })
     }
@@ -379,13 +377,13 @@ where
         T: Clone,
         for<'a> T: AddAssign<&'a T>,
     {
-        let mut tmp = Self::new(self.prec);
+        let mut tmp = Self::new(self.m, self.prec);
         tmp.pow_mut(self, a);
         tmp
     }
 
     pub fn is_zero(&self) -> bool {
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             if !self.fcvec.fc_ref(v, u, bd).is_zero_g() {
                 return false;
             }
@@ -408,7 +406,7 @@ where
 
     pub fn fc_vector(&self, len: usize) -> Vec<T> {
         let mut vu_vec = Vec::new();
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             vu_vec.push((v, u));
         });
         let res: Vec<_> = vu_vec
@@ -432,7 +430,7 @@ where
         T: Clone,
     {
         let mut vu_vec = Vec::new();
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             if u >= 0 {
                 vu_vec.push((v, u));
             }
@@ -454,19 +452,19 @@ where
     }
 
     pub fn set(&mut self, other: &Self) {
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             self.fcvec.fc_ref_mut(v, u, bd).set_g(other.fcvec.fc_ref(v, u, bd));
         })
     }
 
     pub fn set_zero(&mut self) {
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             self.fcvec.fc_ref_mut(v, u, bd).set_ui_g(0);
         })
     }
 
     pub fn negate(&mut self) {
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             self.fcvec.fc_ref_mut(v, u, bd).negate_g();
         })
     }
@@ -482,7 +480,7 @@ where
             a.set_ui_g(0);
             vec.push(a);
         }
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             vec[v] += self.fcvec.fc_ref(v, u, bd);
         });
         vec
@@ -493,7 +491,7 @@ impl HmfGen<Fmpz> {
     pub fn gcd(&self) -> Fmpz {
         let mut res = Fmpz::new();
         let mut tmp = Fmpz::new();
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             tmp.set(&res);
             res.gcd_mut(&tmp, self.fcvec.fc_ref(v, u, bd));
         });
@@ -508,23 +506,23 @@ where
     pub fn gcd(&self) -> Fmpz {
         let mut res = Fmpz::new();
         let mut tmp = Fmpz::new();
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             tmp.set(&res);
             res.gcd_mut(&tmp, &self.fcvec.fc_ref(v, u, bd).ir_part());
             tmp.set(&res);
             res.gcd_mut(&tmp, &self.fcvec.fc_ref(v, u, bd).rt_part());
         });
         let mut a = false;
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             tmp.add_mut(&self.fcvec.fc_ref(v, u, bd).ir_part(),
                         &self.fcvec.fc_ref(v, u, bd).rt_part());
             tmp /= &res;
-            if tmp.is_congruent_to_ui(1, 2) {
+            if self.m & 0b11 == 1 && !tmp.is_even() {
                 a = true;
                 break;
             }
         });
-        if a { res >> 1 } else { res }
+        if a { &res >> 1 } else { res }
     }
 }
 
@@ -534,7 +532,7 @@ where
 {
     fn div_assign(&mut self, num: &T) {
         let mut tmp = Fmpz::new();
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             self.fcvec.fc_ref_mut(v, u, bd).set_divexact_g(num, &mut tmp);
         })
     }
@@ -553,7 +551,7 @@ where
             self.weight = weight_add(self.weight, other.weight);
             let prec = min(self.prec, other.prec);
             self.decrease_prec(prec);
-            v_u_bd_iter!((self.u_bds, v, u, bd) {
+            v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
                 T::add_assign(
                     self.fcvec.fc_ref_mut(v, u, bd),
                     other.fcvec.fc_ref(v, u, bd),
@@ -572,7 +570,7 @@ where
         self.weight = weight_add(self.weight, other.weight);
         let prec = min(self.prec, other.prec);
         self.decrease_prec(prec);
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             *self.fcvec.fc_ref_mut(v, u, bd) -= other.fcvec.fc_ref(v, u, bd);
         })
     }
@@ -585,7 +583,7 @@ where
     type Output = HmfGen<T>;
     fn add(self, other: &HmfGen<T>) -> HmfGen<T> {
         let prec = min(self.prec, other.prec);
-        let mut res = HmfGen::new(prec);
+        let mut res = HmfGen::new(self.m, prec);
         res.add_mut(self, other);
         res
     }
@@ -639,7 +637,7 @@ where
     type Output = HmfGen<T>;
     fn mul(self, other: &HmfGen<T>) -> HmfGen<T> {
         let prec = min(self.prec, other.prec);
-        let mut res = HmfGen::new(prec);
+        let mut res = HmfGen::new(self.m, prec);
         res.mul_mut(self, other);
         res
     }
@@ -651,7 +649,7 @@ where
 {
     type Output = HmfGen<T>;
     fn mul(self, other: &T) -> HmfGen<T> {
-        let mut res = HmfGen::new(self.prec);
+        let mut res = HmfGen::new(self.m, self.prec);
         res.mul_mut_by_const(self, other);
         res
     }
@@ -663,7 +661,7 @@ where
 {
     type Output = HmfGen<T>;
     fn mul(self, other: &T) -> HmfGen<T> {
-        let mut res = HmfGen::new(self.prec);
+        let mut res = HmfGen::new(self.m, self.prec);
         res.mul_mut_by_const(&self, other);
         res
     }
@@ -675,7 +673,7 @@ where
 {
     type Output = HmfGen<T>;
     fn mul(self, other: c_long) -> HmfGen<T> {
-        let mut res = HmfGen::new(self.prec);
+        let mut res = HmfGen::new(self.m, self.prec);
         res.mul_mut_by_const(self, &T::from_si_g(other));
         res
     }
@@ -699,7 +697,7 @@ where
 {
     type Output = HmfGen<T>;
     fn mul(self, other: c_long) -> HmfGen<T> {
-        let mut res = HmfGen::new(self.prec);
+        let mut res = HmfGen::new(self.m, self.prec);
         res.mul_mut_by_const(&self, &T::from_si_g(other));
         res
     }
@@ -712,7 +710,7 @@ where
     type Output = HmfGen<T>;
     fn sub(self, other: &HmfGen<T>) -> HmfGen<T> {
         let prec = min(self.prec, other.prec);
-        let mut res = HmfGen::new(prec);
+        let mut res = HmfGen::new(self.m, prec);
         res.sub_mut(self, other);
         res
     }
@@ -724,7 +722,7 @@ where
 {
     type Output = HmfGen<T>;
     fn neg(self) -> HmfGen<T> {
-        let mut res = HmfGen::new(self.prec);
+        let mut res = HmfGen::new(self.m, self.prec);
         let mone = T::from_si_g(-1);
         res.mul_mut_by_const(self, &mone);
         res
@@ -737,7 +735,7 @@ where
 {
     fn eq(&self, other: &HmfGen<T>) -> bool {
         let prec = min(self.prec, other.prec);
-        v_u_bd_iter!((self.u_bds.take(prec + 1), v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds.take(prec + 1), v, u, bd) {
             if self.fcvec.fc_ref(v, u, bd) != other.fcvec.fc_ref(v, u, bd) {
                 return false;
             }
@@ -757,6 +755,7 @@ fn _mul_mut_tmp<T>(
     fc_vec1: &FcVec<T>,
     fc_vec2: &FcVec<T>,
     u_bds: &UBounds,
+    m: u64,
 ) where
     for<'a> T: AddAssign<&'a T>,
     T: BigNumber,
@@ -766,7 +765,7 @@ fn _mul_mut_tmp<T>(
     for v2 in 0..(v + 1) {
         let bd2 = u_bds.vec[v2] as i64;
         let v2_i64 = v2 as i64;
-        for u2 in u_iter!(v2_i64, bd2) {
+        for u2 in u_iter!(m, v2_i64, bd2) {
             if !fc_vec2.fc_ref(v2, u2, bd2).is_zero_g() {
                 let u1 = u - u2;
                 let v1 = v - v2;
@@ -793,8 +792,8 @@ where
         // We need cloned self.
         let f = self.clone();
         let mut tmp = T::from_ui_g(0);
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
-            _mul_mut_tmp(&mut tmp, u, v, &f.fcvec, &other.fcvec, &self.u_bds);
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
+            _mul_mut_tmp(&mut tmp, u, v, &f.fcvec, &other.fcvec, &self.u_bds, self.m);
             self.fcvec.fc_ref_mut(v, u, bd).set_g(&tmp);
             })
     }
@@ -806,7 +805,7 @@ where
 {
     fn mul_assign(&mut self, other: &T) {
         let mut tmp = Fmpz::new();
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             self.fcvec.fc_ref_mut(v, u, bd).mul_assign_g(&other, &mut tmp);
         }
         )
@@ -818,7 +817,7 @@ where
     T: BigNumber + MulAssign<c_ulong>,
 {
     fn mul_assign(&mut self, other: c_ulong) {
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             *self.fcvec.fc_ref_mut(v, u, bd) *= other;
         }
         );
@@ -830,7 +829,7 @@ where
     T: BigNumber + MulAssign<c_long>,
 {
     fn mul_assign(&mut self, other: c_long) {
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             *self.fcvec.fc_ref_mut(v, u, bd) *= other;
         }
         );
@@ -842,7 +841,7 @@ where
     T: BigNumber + ShlAssign<usize>,
 {
     fn shl_assign(&mut self, other: usize) {
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             T::shl_assign(self.fcvec.fc_ref_mut(v, u, bd), other);
         }
         );
@@ -855,7 +854,7 @@ where
     T: BigNumber + ShrAssign<usize>,
 {
     fn shr_assign(&mut self, other: usize) {
-        v_u_bd_iter!((self.u_bds, v, u, bd) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             T::shr_assign(self.fcvec.fc_ref_mut(v, u, bd), other);
         }
         );
@@ -901,7 +900,7 @@ where
     for<'a> T: SubAssign<&'a T>,
 {
     let (v_init, _, _) = initial_term(&g).unwrap();
-    let mut tmp = HmfGen::<T>::new(g.prec);
+    let mut tmp = HmfGen::<T>::new(res.m, g.prec);
     let mut f_cloned = f.clone();
     let prec = f.prec;
     assert!(prec >= v_init);
@@ -957,7 +956,7 @@ where
     for v in v_init..(prec + 1) {
         let v_i = v as i64;
         let bd_i = u_bds.vec[v] as i64;
-        for _ in u_iter!(v_i, bd_i) {
+        for _ in u_iter!(res.m, v_i, bd_i) {
             count += 1;
         }
     }

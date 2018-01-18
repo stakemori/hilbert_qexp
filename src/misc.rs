@@ -1,6 +1,6 @@
-use std::ops::{Mul, Add, Sub, Neg, Shr, MulAssign};
+use std::ops::MulAssign;
 
-fn int_sqrt(x: u64) -> u64 {
+pub fn int_sqrt(x: u64) -> u64 {
     debug_assert!(x < 1 << 53);
     (x as f64).sqrt().floor() as u64
 }
@@ -30,6 +30,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 pub fn prime_sieve(n: usize) -> Vec<usize> {
     let mut vec = Vec::with_capacity(n + 1);
     for _ in 0..(n + 1) {

@@ -1,4 +1,4 @@
-use gmp::mpz::Mpz;
+use flint::fmpz::Fmpz;
 use elements::UBounds;
 use std::ops::{SubAssign, ShrAssign, ShlAssign};
 use bignum::BigNumber;
@@ -18,6 +18,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 pub fn shr_assign<T>(f_vec: &mut Vec<T>, v: usize, u_bds: &UBounds, a: usize)
 where
     T: ShrAssign<usize>,
@@ -72,7 +73,7 @@ pub fn mul_mut<T>(
         f_vec[(gap_gh + i) as usize].set_ui_g(0);
         f_vec[(gap_gh - i) as usize].set_ui_g(0);
     }
-    let mut tmp = Mpz::new();
+    let mut tmp = Fmpz::new();
     // naive implementation of polynomial multiplication
     // i -> i - bd_g
     for i in (0..(2 * bd_g + 1)).filter(|&x| is_even!(v_g + x + bd_g + parity_g)) {
@@ -110,7 +111,7 @@ pub fn div_mut<T>(
     for i in -bd_h..(bd_h + 1) {
         h_vec[(gap_h + i) as usize].set_ui_g(0);
     }
-    let mut tmp = Mpz::new();
+    let mut tmp = Fmpz::new();
     // initial index of g
     let n = ((-bd_g)..(bd_g + 1))
         .rev()
@@ -134,50 +135,5 @@ pub fn div_mut<T>(
         }
         h_vec[(gap_h + m) as usize].set_g(&tmp_elt);
         h_vec[(gap_h + m) as usize].set_divexact_g(&g_vec[(gap_g + n) as usize], &mut tmp);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use theta_chars::g5_normalized;
-    use elements::HmfGen;
-
-    // fn print_vth_cf(f: &HmfGen<Mpz>, v: usize) {
-    //     let bd = f.u_bds.vec[v] as i64;
-    //     let v_i = v as i64;
-    //     let mut res = Vec::new();
-    //     for u in (-bd..(bd + 1)).filter(|u| is_even!(v_i + u)) {
-    //         let a = f.fcvec.fc_ref(v, u, bd);
-    //         if !a.is_zero() {
-    //             res.push(format!("({}) * q1**({})", a, u));
-    //         }
-    //     }
-    //     println!("{}", res.join(" + "));
-    // }
-
-    #[test]
-    fn test_divide() {
-        let prec = 10;
-        let a = g5_normalized(prec);
-        let mut b = HmfGen::new(prec);
-        b.pow_mut(&a, 3);
-        let c = &a * &b;
-        let mut h = HmfGen::<Mpz>::new(prec);
-        let u_bds = b.u_bds;
-        div_mut(
-            &c.fcvec.vec[4],
-            &a.fcvec.vec[1],
-            &mut h.fcvec.vec[3],
-            1,
-            3,
-            u_bds.vec[1],
-            u_bds.vec[3],
-            u_bds.vec[4],
-            &u_bds,
-        );
-        let v = vec![0, 0, 0, -1, 0, 3, 0, -3, 0, 1, 0, 0, 0];
-        let v: Vec<_> = v.iter().map(|&x| Mpz::from_si(x)).collect();
-        assert_eq!(h.fcvec.vec[3], v);
     }
 }

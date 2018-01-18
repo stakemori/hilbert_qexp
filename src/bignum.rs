@@ -89,7 +89,7 @@ impl BigNumber for Fmpz {
     }
 
     fn is_multiple_of_g(&self, x: &Fmpz, _tmpelt: &mut Self, _tmp: &mut Fmpz) -> bool {
-        self.is_multiple_of(x)
+        self.is_divisible(x)
     }
 
     fn new_g() -> Fmpz {
@@ -195,9 +195,10 @@ impl Sqrt5Z {
 
     // Return maximum positive integer `a` such that `self/a` is integral.
     pub fn content(&self) -> Fmpz {
-        let a = self.rt.gcd(&self.ir);
-        let b = &(&self.rt - &self.ir) / &a;
-        if !b.is_multiple_of_ui(2) { a >> 1 } else { a }
+        let a = Fmpz::gcd(&self.rt, &self.ir);
+        let mut b = &self.rt - &self.ir;
+        b /= &a;
+        if !b.is_even() { a >> 1 } else { a }
     }
 }
 
@@ -288,12 +289,12 @@ impl BigNumber for Sqrt5Z {
         tmpelt.conj_mut();
         tmpelt.mul_assign_g(&x, tmp);
         x.norm(tmp);
-        if tmpelt.ir.is_multiple_of(&tmp) && tmpelt.rt.is_multiple_of(&tmp) {
+        if tmpelt.ir.is_divisible(&tmp) && tmpelt.rt.is_divisible(&tmp) {
             tmpelt.ir /= tmp as &Fmpz;
             tmpelt.rt /= tmp as &Fmpz;
             tmp.add_mut(&tmpelt.ir, &tmpelt.rt);
             // TODO: Use macro Fmpz_even_p.
-            tmp.is_multiple_of_ui(2)
+            tmp.is_even()
         } else {
             false
         }
@@ -349,13 +350,13 @@ impl fmt::Display for Sqrt5Z {
             write!(f, "{}", &self.rt >> 1)
         } else {
             let mut tmp_ply = FmpzPoly::new();
-            if self.ir.is_multiple_of_ui(2) {
-                tmp_ply.set_coeff(&From::from(&(&self.rt >> 1)), 0);
-                tmp_ply.set_coeff(&From::from(&(&self.ir >> 1)), 1);
+            if self.ir.is_even() {
+                tmp_ply.set_coeff(&(&self.rt >> 1), 0);
+                tmp_ply.set_coeff(&(&self.ir >> 1), 1);
                 write!(f, "{}", tmp_ply)
             } else {
-                tmp_ply.set_coeff(&From::from(&self.rt), 0);
-                tmp_ply.set_coeff(&From::from(&self.ir), 1);
+                tmp_ply.set_coeff(&(self.rt), 0);
+                tmp_ply.set_coeff(&(&self.ir), 1);
                 write!(f, "({})/2", tmp_ply)
             }
         }
@@ -396,15 +397,15 @@ impl MulAssign<c_ulong> for Sqrt5Z {
     }
 }
 
-impl ShlAssign<usize> for Sqrt5Z {
-    fn shl_assign(&mut self, other: usize) {
+impl ShlAssign<u64> for Sqrt5Z {
+    fn shl_assign(&mut self, other: u64) {
         self.rt <<= other;
         self.ir <<= other;
     }
 }
 
-impl ShrAssign<usize> for Sqrt5Z {
-    fn shr_assign(&mut self, other: usize) {
+impl ShrAssign<u64> for Sqrt5Z {
+    fn shr_assign(&mut self, other: u64) {
         self.rt >>= other;
         self.ir >>= other;
     }
@@ -514,8 +515,8 @@ mod tests {
         let mut a = Sqrt5Z::new_g();
         let b = Sqrt5Z::from_sisi(3, 5);
         a.pow_mut(&b, 10);
-        assert_eq!(a.rt_part().to_str_radix(10), "322355827");
-        assert_eq!(a.ir_part().to_str_radix(10), "142989825");
+        assert_eq!(a.rt_part().get_string(10), "322355827");
+        assert_eq!(a.ir_part().get_string(10), "142989825");
     }
 
     #[test]

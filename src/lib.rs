@@ -1,8 +1,9 @@
 extern crate libc;
 extern crate flint;
 
-pub mod bignum;
+#[macro_use]
 pub mod elements;
+pub mod bignum;
 mod misc;
 mod fcvec;
 
