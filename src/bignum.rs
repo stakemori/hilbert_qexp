@@ -4,6 +4,7 @@ use std::fmt;
 use std::ops::{AddAssign, SubAssign, ShlAssign, ShrAssign, MulAssign};
 use std;
 use flint::fmpz_poly::FmpzPoly;
+use flint::fmpq::Fmpq;
 
 pub trait RealQuadElement<S> {
     fn rt_part(&self) -> S;
@@ -48,6 +49,78 @@ pub trait BigNumber {
             }
         }
 
+    }
+}
+
+impl BigNumber for Fmpq {
+    fn is_zero_g(&self) -> bool {
+        self.is_zero()
+    }
+
+    fn from_ui_g(x: c_ulong) -> Self {
+        debug_assert!(x < ::std::i64::MAX as u64);
+        From::from((x as c_long, 1))
+    }
+
+    fn from_si_g(x: c_long) -> Self {
+        From::from((x, 1))
+    }
+
+    fn set_ui_g(&mut self, x: c_ulong) {
+        self.set_ui(x, 1);
+    }
+
+    fn set_si_g(&mut self, x: c_long) {
+        self.set_si(x, 1);
+    }
+
+    fn set_g(&mut self, other: &Self) {
+        self.set(other);
+    }
+
+    fn add_mut_g(&mut self, x: &Self, y: &Self) {
+        self.add_mut(x, y);
+    }
+
+    fn sub_mut_g(&mut self, x: &Self, y: &Self) {
+        self.sub_mut(x, y);
+    }
+
+    fn mul_mut_g(&mut self, x: &Self, y: &Self) {
+        self.mul_mut(x, y);
+    }
+
+    fn is_multiple_of_g(&self, x: &Self, _tmpelt: &mut Self, _tmp: &mut Fmpz) -> bool {
+        if x.is_zero() { self.is_zero() } else { true }
+    }
+
+    fn new_g() -> Self {
+        Fmpq::new()
+    }
+
+    fn set_divexact_g(&mut self, x: &Self, _tmp: &mut Fmpz) {
+        debug_assert!(!x.is_zero());
+        *self /= x;
+    }
+
+    fn mul_assign_g(&mut self, other: &Self, _tmp: &mut Fmpz) {
+        *self *= other;
+    }
+
+    fn addmul_mut_g(&mut self, x: &Self, y: &Self, _tmp: &mut Fmpz) {
+        self.add_mul_mut(x, y);
+    }
+
+    fn submul_mut_g(&mut self, x: &Self, y: &Self, _tmp: &mut Fmpz) {
+        self.sub_mul_mut(x, y);
+    }
+
+    fn square_g(&mut self, _tmp_elt: &mut Self, _tmp: &mut Fmpz) {
+        self.set_pow_si(2);
+    }
+
+    fn negate_g(&mut self) {
+        self.negate();
     }
 }
 
