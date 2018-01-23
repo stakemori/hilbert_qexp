@@ -27,6 +27,10 @@ pub struct HmfGen<T> {
     pub m: u64,
 }
 
+macro_rules! is_1mod4 {
+    ($expr: expr) => {($expr) & 0b11 == 1}
+}
+
 
 macro_rules! is_even {
     ($expr: expr) => {($expr) & 1 == 0}
