@@ -163,7 +163,7 @@ impl UBounds {
     pub fn new(m: u64, prec: usize) -> UBounds {
         let mut u_bds = Vec::new();
         for v in 0..(prec + 1) {
-            u_bds.push(int_sqrt(m * v as u64) as usize);
+            u_bds.push(int_sqrt(m * v as u64 * v as u64) as usize);
         }
         UBounds { vec: u_bds }
     }
