@@ -7,7 +7,7 @@ use gmp::mpz::Mpz;
 
 fn norm_realquad(u: i64, v: i64, m: u64) -> i64 {
     if is_1mod4!(m) {
-        (u * u - (m as i64) * v * v) >> 1
+        (u * u - (m as i64) * v * v) >> 2
     } else {
         u * u - m as i64 * v * v
     }
@@ -62,8 +62,12 @@ pub fn eisenstein_series_from_lvals(
 
                     tmp1.set_si(p * p, 1);
                     tmp1.set_pow_si(k as i64 - 1);
-                    tmp1.set_pow_si(n + 1);
+                    tmp1.set_pow_si((n >> 1) + 1);
                     tmp1 -= 1;
+
+                    tmp2.set_si(p * p, 1);
+                    tmp2.set_pow_si(k as i64 - 1);
+                    tmp2 -= 1;
 
                     tmp1 /= &tmp2;
                     *(res.fcvec.fc_ref_mut(v, u, bd)) *= &tmp1;
@@ -76,16 +80,19 @@ pub fn eisenstein_series_from_lvals(
                     tmp2.set_pow_si(k as i64 - 1);
                     tmp2 -= 1;
 
-                    tmp1.set_si(p, 1);
-                    tmp1.set_pow_si(k as i64 - 1);
-                    tmp1.set_pow_si(a + 1);
-                    tmp1 /= &tmp2;
-
-                    *(res.fcvec.fc_ref_mut(v, u, bd)) *= &tmp1;
+                    if a > 0 {
+                        tmp1.set_si(p, 1);
+                        tmp1.set_pow_si(k as i64 - 1);
+                        tmp1.set_pow_si(a + 1);
+                        tmp1 -= 1;
+                        tmp1 /= &tmp2;
+                        *(res.fcvec.fc_ref_mut(v, u, bd)) *= &tmp1;
+                    }
 
                     tmp1.set_si(p, 1);
                     tmp1.set_pow_si(k as i64 - 1);
                     tmp1.set_pow_si(b + 1);
+                    tmp1 -= 1;
                     tmp1 /= &tmp2;
                     *(res.fcvec.fc_ref_mut(v, u, bd)) *= &tmp1;
                 },
@@ -97,24 +104,28 @@ pub fn eisenstein_series_from_lvals(
                     tmp1.set_si(p, 1);
                     tmp1.set_pow_si(k as i64 - 1);
                     tmp1.set_pow_si(n + 1);
+                    tmp1 -= 1;
                     tmp1 /= &tmp2;
                     *(res.fcvec.fc_ref_mut(v, u, bd)) *= &tmp1;
-                }
+                },
             }
         }
     });
     res
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//     #[test]
-//     fn it_works() {
-//         let a = Mpz::from_si(40);
-//         for &p in prime_sieve(100).iter() {
-//             println!("{}: {}", p, Mpz::kronecker_si(&a, p as i64));
-//         }
-//     }
-// }
+    #[test]
+    fn test_eisenstein() {
+        let num: Fmpz = From::from(120);
+        let den: Fmpz = From::from(1);
+        let g2 = eisenstein_series_from_lvals(2, 5, &num, &den, 5);
+        let num4: Fmpz = From::from(240);
+        let den4: Fmpz = From::from(1);
+        let g4 = eisenstein_series_from_lvals(4, 5, &num4, &den4, 5);
+        assert_eq!(&g2 * &g2, g4);
+    }
+}
