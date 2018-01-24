@@ -312,7 +312,7 @@ where
 
     pub fn is_divisible_by_const(&self, a: &T) -> bool {
         let mut tmpelt = T::new_g();
-        let mut tmp = Fmpz::new();
+        let mut tmp = T::R::default();
         v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             if !self.fcvec.fc_ref(v, u, bd).is_multiple_of_g(
                 a,
@@ -535,7 +535,7 @@ where
     T: BigNumber,
 {
     fn div_assign(&mut self, num: &T) {
-        let mut tmp = Fmpz::new();
+        let mut tmp = T::R::default();
         v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             self.fcvec.fc_ref_mut(v, u, bd).set_divexact_g(num, &mut tmp);
         })
@@ -808,7 +808,7 @@ where
     T: BigNumber,
 {
     fn mul_assign(&mut self, other: &T) {
-        let mut tmp = Fmpz::new();
+        let mut tmp = T::R::default();
         v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             self.fcvec.fc_ref_mut(v, u, bd).mul_assign_g(&other, &mut tmp);
         }

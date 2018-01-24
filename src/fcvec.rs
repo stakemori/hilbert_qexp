@@ -1,4 +1,3 @@
-use flint::fmpz::Fmpz;
 use elements::UBounds;
 use std::ops::{SubAssign, ShrAssign, ShlAssign};
 use bignum::BigNumber;
@@ -73,7 +72,7 @@ pub fn mul_mut<T>(
         f_vec[(gap_gh + i) as usize].set_ui_g(0);
         f_vec[(gap_gh - i) as usize].set_ui_g(0);
     }
-    let mut tmp = Fmpz::new();
+    let mut tmp = T::R::default();
     // naive implementation of polynomial multiplication
     // i -> i - bd_g
     for i in (0..(2 * bd_g + 1)).filter(|&x| is_even!(v_g + x + bd_g + parity_g)) {
@@ -111,7 +110,7 @@ pub fn div_mut<T>(
     for i in -bd_h..(bd_h + 1) {
         h_vec[(gap_h + i) as usize].set_ui_g(0);
     }
-    let mut tmp = Fmpz::new();
+    let mut tmp = T::R::default();
     // initial index of g
     let n = ((-bd_g)..(bd_g + 1))
         .rev()
