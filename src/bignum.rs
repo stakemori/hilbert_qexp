@@ -108,11 +108,11 @@ impl BigNumber for Fmpq {
     }
 
     fn addmul_mut_g(&mut self, x: &Self, y: &Self, _tmp: &mut Fmpz) {
-        self.add_mul_mut(x, y);
+        self.addmul_mut(x, y);
     }
 
     fn submul_mut_g(&mut self, x: &Self, y: &Self, _tmp: &mut Fmpz) {
-        self.sub_mul_mut(x, y);
+        self.submul_mut(x, y);
     }
 
     fn square_g(&mut self, _tmp_elt: &mut Self, _tmp: &mut Fmpz) {
