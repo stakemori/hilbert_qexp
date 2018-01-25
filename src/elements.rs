@@ -955,6 +955,67 @@ where
     }
 }
 
+/// Set `res` to a square root of `f`. `v_init` is the initial exponent of `q = exp(2pi v z)`.
+/// And we assume `res[n]` is already set.
+pub fn square_root_mut<T>(res: &mut HmfGen<T>, v_init: usize, f: &HmfGen<T>)
+where
+    T: BigNumber + Clone,
+    for<'a> T: SubAssign<&'a T>,
+{
+    let mut tmp = HmfGen::<T>::new(res.m, f.prec);
+    let mut f_cloned = f.clone();
+    let prec = f.prec;
+    assert!(prec >= v_init);
+
+    res.decrease_prec(prec - v_init);
+    if let Some((k1, k2)) = f.weight {
+        res.weight = Some((k1 >> 1, k2 >> 1));
+    } else {
+        res.weight = None;
+    }
+    let init_vec = res.fcvec.vec[v_init].clone();
+    let ref u_bds = f.u_bds;
+
+    for v in v_init..(prec + 1) {
+        for i in (1 + v_init)..(v + 1) {
+            fcvec::mul_mut(
+                &mut tmp.fcvec.vec[v],
+                &res.fcvec.vec[i],
+                &res.fcvec.vec[v - i],
+                i,
+                v - i,
+                u_bds.vec[i],
+                u_bds.vec[v - i],
+                u_bds.vec[v],
+                u_bds,
+                0,
+                0,
+                0,
+                res.m,
+            );
+            fcvec::sub_assign(
+                &mut f_cloned.fcvec.vec[v],
+                &tmp.fcvec.vec[v],
+                v,
+                u_bds,
+                res.m,
+            );
+        }
+        fcvec::div_mut(
+            &f_cloned.fcvec.vec[v],
+            &init_vec,
+            &mut res.fcvec.vec[v - v_init],
+            v_init,
+            v - v_init,
+            u_bds.vec[v_init],
+            u_bds.vec[v - v_init],
+            u_bds.vec[v],
+            &u_bds,
+        );
+    }
+}
+
+
 // Todo: make the denominator small.
 pub fn div_mut_with_denom<T>(res: &mut HmfGen<T>, f: &HmfGen<T>, g: &HmfGen<T>, check: bool) -> T
 where
