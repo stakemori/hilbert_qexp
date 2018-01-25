@@ -900,7 +900,7 @@ where
     println!("{}: {}", s, res.join(" + "));
 }
 
-/// Assuming f is divisible by g in coefficeint T, set res = g/h.
+/// Assuming f is divisible by g in coefficeint T, set res = f/g.
 pub fn div_mut<T>(res: &mut HmfGen<T>, f: &HmfGen<T>, g: &HmfGen<T>)
 where
     T: BigNumber + Clone,
