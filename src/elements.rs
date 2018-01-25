@@ -872,7 +872,10 @@ where
     for (v, &bd) in f.u_bds.vec.iter().enumerate() {
         let bd = bd as i64;
         let v_i64 = v as i64;
-        for u in (-bd..(bd + 1)).rev().filter(|&x| is_even!(x + v_i64)) {
+        for u in (-bd..(bd + 1)).rev().filter(|&x| {
+            !is_1mod4!(f.m) || is_even!(x + v_i64)
+        })
+        {
             if !f.fcvec.fc_ref(v, u, bd).is_zero_g() {
                 return Some((v, u, f.fcvec.fc_ref(v, u, bd)));
             }
@@ -928,8 +931,15 @@ where
                 0,
                 0,
                 0,
+                res.m,
             );
-            fcvec::sub_assign(&mut f_cloned.fcvec.vec[v], &tmp.fcvec.vec[v], v, u_bds);
+            fcvec::sub_assign(
+                &mut f_cloned.fcvec.vec[v],
+                &tmp.fcvec.vec[v],
+                v,
+                u_bds,
+                res.m,
+            );
         }
         fcvec::div_mut(
             &f_cloned.fcvec.vec[v],

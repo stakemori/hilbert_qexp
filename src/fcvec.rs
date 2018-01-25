@@ -2,15 +2,15 @@ use elements::UBounds;
 use std::ops::SubAssign;
 use bignum::BigNumber;
 
-pub fn sub_assign<T>(f_vec: &mut Vec<T>, g_vec: &Vec<T>, v: usize, u_bds: &UBounds)
+pub fn sub_assign<T>(f_vec: &mut Vec<T>, g_vec: &Vec<T>, v: usize, u_bds: &UBounds, m: u64)
 where
     for<'a> T: SubAssign<&'a T>,
 {
     let bd = u_bds.vec[v];
-    for i in (0..(bd + 1)).filter(|x| is_even!(x + v)) {
+    for i in (0..(bd + 1)).filter(|x| !is_1mod4!(m) || is_even!(x + v)) {
         T::sub_assign(&mut f_vec[bd + i], &g_vec[bd + i]);
     }
-    for i in (1..(bd + 1)).filter(|x| is_even!(x + v)) {
+    for i in (1..(bd + 1)).filter(|x| !is_1mod4!(m) || is_even!(x + v)) {
         let idx = bd - i;
         T::sub_assign(&mut f_vec[idx], &g_vec[idx])
     }
@@ -32,6 +32,7 @@ pub fn mul_mut<T>(
     parity_g: usize,
     parity_h: usize,
     parity_gh: usize,
+    m: u64,
 ) where
     T: BigNumber,
 {
@@ -39,15 +40,18 @@ pub fn mul_mut<T>(
     let bd_h = u_bds.vec[v_h];
     let bd_gh = u_bds.vec[v_g + v_h];
 
-    for i in (0..(bd_gh + 1)).filter(|&x| is_even!(v_g + v_h + x + parity_gh)) {
+    for i in (0..(bd_gh + 1)).filter(|&x| is_1mod4!(m) || is_even!(v_g + v_h + x + parity_gh)) {
         f_vec[(gap_gh + i) as usize].set_ui_g(0);
         f_vec[(gap_gh - i) as usize].set_ui_g(0);
     }
     let mut tmp = T::R::default();
     // naive implementation of polynomial multiplication
     // i -> i - bd_g
-    for i in (0..(2 * bd_g + 1)).filter(|&x| is_even!(v_g + x + bd_g + parity_g)) {
-        for j in (0..(2 * bd_h + 1)).filter(|&x| is_even!(v_h + x + bd_h + parity_h)) {
+    for i in (0..(2 * bd_g + 1)).filter(|&x| is_1mod4!(m) || is_even!(v_g + x + bd_g + parity_g)) {
+        for j in (0..(2 * bd_h + 1)).filter(|&x| {
+            is_1mod4!(m) || is_even!(v_h + x + bd_h + parity_h)
+        })
+        {
             f_vec[gap_gh + i + j - bd_g - bd_h].addmul_mut_g(
                 &g_vec[gap_g + i - bd_g],
                 &h_vec[gap_h + j - bd_h],
