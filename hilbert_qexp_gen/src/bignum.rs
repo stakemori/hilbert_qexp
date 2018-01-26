@@ -746,6 +746,32 @@ macro_rules! impl_quad_elt {
                 self.rt == other.rt && self.ir == other.ir
             }
         }
+
+        impl From<(i64, u64)> for $name {
+            fn from(a: (i64, u64)) -> Self {
+                let mut rt = Fmpq::new();
+                let mut ir = Fmpq::new();
+                rt.set_si(a.0, 1);
+                ir.set_ui(a.1, 1);
+                $name {
+                    rt: rt,
+                    ir: ir,
+                }
+            }
+        }
+
+        impl From<(i64, i64)> for $name {
+            fn from(a: (i64, i64)) -> Self {
+                let mut rt = Fmpq::new();
+                let mut ir = Fmpq::new();
+                rt.set_si(a.0, 1);
+                ir.set_si(a.1, 1);
+                $name {
+                    rt: rt,
+                    ir: ir,
+                }
+            }
+        }
     }
 }
 
