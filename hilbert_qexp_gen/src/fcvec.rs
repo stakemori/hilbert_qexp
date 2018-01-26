@@ -54,16 +54,16 @@ pub fn mul_mut<T>(
     let bd_h = u_bds.vec[v_h];
     let bd_gh = u_bds.vec[v_g + v_h];
 
-    for i in (0..(bd_gh + 1)).filter(|&x| is_1mod4!(m) || is_even!(v_g + v_h + x + parity_gh)) {
+    for i in (0..(bd_gh + 1)).filter(|&x| !is_1mod4!(m) || is_even!(v_g + v_h + x + parity_gh)) {
         f_vec[(gap_gh + i) as usize].set_ui_g(0);
         f_vec[(gap_gh - i) as usize].set_ui_g(0);
     }
     let mut tmp = T::R::default();
     // naive implementation of polynomial multiplication
     // i -> i - bd_g
-    for i in (0..(2 * bd_g + 1)).filter(|&x| is_1mod4!(m) || is_even!(v_g + x + bd_g + parity_g)) {
+    for i in (0..(2 * bd_g + 1)).filter(|&x| !is_1mod4!(m) || is_even!(v_g + x + bd_g + parity_g)) {
         for j in (0..(2 * bd_h + 1)).filter(|&x| {
-            is_1mod4!(m) || is_even!(v_h + x + bd_h + parity_h)
+            !is_1mod4!(m) || is_even!(v_h + x + bd_h + parity_h)
         })
         {
             f_vec[gap_gh + i + j - bd_g - bd_h].addmul_mut_g(
