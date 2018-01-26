@@ -774,7 +774,7 @@ fn _mul_mut_tmp<T>(
                 let u1 = u - u2;
                 let v1 = v - v2;
                 let u1abs = u1.abs() as usize;
-                if u1abs * u1abs <= 5 * v1 * v1 {
+                if u1abs * u1abs <= m as usize * v1 * v1 {
                     let bd1 = u_bds.vec[v1] as i64;
                     tmp.mul_mut_g(fc_vec2.fc_ref(v2, u2, bd2), fc_vec1.fc_ref(v1, u1, bd1));
                     T::add_assign(a, &tmp);
