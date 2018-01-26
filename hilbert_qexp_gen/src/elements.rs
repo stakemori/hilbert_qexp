@@ -979,7 +979,7 @@ where
     let ref u_bds = f.u_bds;
 
     for v in (2 * v_init + 1)..(prec + 1) {
-        for i in (1 + v_init)..(v + 1) {
+        for i in (1 + v_init)..(v - v_init) {
             fcvec::mul_mut(
                 &mut tmp.fcvec.vec[v],
                 &res.fcvec.vec[i],
