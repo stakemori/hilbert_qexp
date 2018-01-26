@@ -50,7 +50,7 @@ fn diff_mul<T>(
 #[derive(Debug)]
 pub struct NotHhmError {}
 
-pub fn rankin_cohen_ir<T>(n: usize, f: &HmfGen<T>, g: &HmfGen<T>) -> Result<HmfGen<T>, NotHhmError>
+pub fn rankin_cohen<T>(n: usize, f: &HmfGen<T>, g: &HmfGen<T>) -> Result<HmfGen<T>, NotHhmError>
 where
     T: BigNumber + From<(i64, u64)> + Clone,
     for<'a> T: MulAssign<&'a Fmpq>,
