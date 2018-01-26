@@ -56,6 +56,27 @@ pub fn s5_form(prec: usize) -> HmfGen<Fmpq> {
     res
 }
 
+fn s9_squared(prec: usize) -> HmfGen<Fmpq> {
+    let g2 = eisensten_series(2, prec);
+    let s4 = s4_form(prec);
+    let s6 = s6_form(prec);
+    let mut res = &g2.pow(3) * &s6;
+    res += &(&(&g2.pow(2) * &s4.pow(2)) * 4);
+    res -= &(&(&g2 * &(&s4 * &s6)) * (32 * 9));
+    res -= &(&s4.pow(3) * 1024);
+    res -= &(&s6.pow(2) * (64 * 27));
+    res * &s6
+}
+
+pub fn s9_form(prec: usize) -> HmfGen<Fmpq> {
+    let f = s9_squared(prec + 1);
+    let mut res = HmfGen::<Fmpq>::new(2, prec + 1);
+    let bd = res.u_bds.vec[1] as i64;
+    res.fcvec.fc_ref_mut(1, 0, bd).set_si(1, 1);
+    square_root_mut(&mut res, 1, &f);
+    res
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -66,5 +87,19 @@ mod tests {
         let f = s5_squared(prec);
         let s5 = s5_form(prec);
         assert_eq!(f, &s5 * &s5);
+    }
+
+    #[test]
+    fn test_s9_squared() {
+        let prec = 5;
+        let f = s9_squared(prec);
+        println!("{}", f);
+        assert_eq!(
+            f.diagonal_restriction(),
+            vec![0, 0, 1, -1056, 270216, 4819328]
+                .into_iter()
+                .map(|x| Into::<Fmpq>::into((x, 1)))
+                .collect::<Vec<_>>()
+        );
     }
 }
