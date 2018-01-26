@@ -6,7 +6,7 @@ extern crate gmp;
 pub mod elements;
 pub mod bignum;
 pub mod eisenstein;
-mod misc;
+pub mod misc;
 mod fcvec;
 
 #[cfg(test)]

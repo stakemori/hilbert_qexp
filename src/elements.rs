@@ -961,6 +961,7 @@ pub fn square_root_mut<T>(res: &mut HmfGen<T>, v_init: usize, f: &HmfGen<T>)
 where
     T: BigNumber + Clone,
     for<'a> T: SubAssign<&'a T>,
+    for<'a> T: std::ops::ShrAssign<u64>,
 {
     let mut tmp = HmfGen::<T>::new(res.m, f.prec);
     let mut f_cloned = f.clone();
@@ -976,7 +977,7 @@ where
     let init_vec = res.fcvec.vec[v_init].clone();
     let ref u_bds = f.u_bds;
 
-    for v in v_init..(prec + 1) {
+    for v in (2 * v_init + 1)..(prec + 1) {
         for i in (1 + v_init)..(v + 1) {
             fcvec::mul_mut(
                 &mut tmp.fcvec.vec[v],
@@ -1012,6 +1013,7 @@ where
             u_bds.vec[v],
             &u_bds,
         );
+        fcvec::shr_assign(&mut res.fcvec.vec[v - v_init], v - v_init, &u_bds, 1, res.m);
     }
 }
 

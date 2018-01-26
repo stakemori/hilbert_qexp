@@ -1,6 +1,20 @@
 use elements::UBounds;
-use std::ops::SubAssign;
+use std::ops::{SubAssign, ShrAssign};
 use bignum::BigNumber;
+
+
+pub fn shr_assign<T>(f_vec: &mut Vec<T>, v: usize, u_bds: &UBounds, a: u64, m: u64)
+where
+    T: ShrAssign<u64>,
+{
+    let bd = u_bds.vec[v];
+    for i in (0..(bd + 1)).filter(|x| !is_1mod4!(m) || is_even!(x + v)) {
+        f_vec[bd + i] >>= a;
+    }
+    for i in (1..(bd + 1)).filter(|x| !is_1mod4!(m) || is_even!(x + v)) {
+        f_vec[bd - i] >>= a;
+    }
+}
 
 pub fn sub_assign<T>(f_vec: &mut Vec<T>, g_vec: &Vec<T>, v: usize, u_bds: &UBounds, m: u64)
 where
