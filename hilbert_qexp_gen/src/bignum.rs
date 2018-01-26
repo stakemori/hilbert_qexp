@@ -699,6 +699,13 @@ macro_rules! impl_quad_elt {
             }
         }
 
+        impl<'a> MulAssign<&'a Fmpq> for $name {
+            fn mul_assign(&mut self, other: &Fmpq) {
+                self.ir *= other;
+                self.rt *= other;
+            }
+        }
+
         impl MulAssign<c_ulong> for $name {
             fn mul_assign(&mut self, other: c_ulong) {
                 self.ir *= other as c_long;
@@ -708,6 +715,13 @@ macro_rules! impl_quad_elt {
 
         impl DivAssign<c_long> for $name {
             fn div_assign(&mut self, other: c_long) {
+                self.ir /= other;
+                self.rt /= other;
+            }
+        }
+
+        impl<'a> DivAssign<&'a Fmpq> for $name {
+            fn div_assign(&mut self, other: &Fmpq) {
                 self.ir /= other;
                 self.rt /= other;
             }
