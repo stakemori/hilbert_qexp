@@ -13,7 +13,8 @@ use fcvec;
 type Weight = Option<(usize, usize)>;
 /// struct for hilbert modualr form over Q(sqrt(m))
 /// this corresponds finite sum of the q-expansion of the form
-/// Σ a(u, v) exp(2piTr 1/sqrt(5) (u + v * sqrt(5))/2)
+/// Σ a(u, v) exp(2piTr 1/sqrt(m) (u + v * sqrt(m))/2 z) if m equiv 1 mod 4
+/// Σ a(u, v) exp(2piTr 1/2sqrt(m) (u + v * sqrt(m)) z) otherwise
 /// where v <= prec.
 /// a(u, v) = fc[v][a], where a = u + u_bds[v]
 #[derive(Debug, Clone)]
@@ -21,7 +22,7 @@ pub struct HmfGen<T> {
     pub prec: usize,
     pub fcvec: FcVec<T>,
     pub weight: Weight,
-    // vth element of u_bds.vec is (sqrt(5) * v).floor()
+    // vth element of u_bds.vec is (sqrt(m) * v).floor()
     pub u_bds: UBounds,
     // Square free positive integer.
     pub m: u64,
