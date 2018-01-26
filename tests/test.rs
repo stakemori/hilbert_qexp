@@ -106,8 +106,6 @@ mod eisen_sqrt2 {
     fn test_wt4_cusp_form() {
         let mut f = f4(5);
         f /= &From::from((-576, 11));
-        for v in f.diagonal_restriction().iter() {
-            assert!(v.is_zero());
-        }
+        assert!(f.diagonal_restriction().iter().all(|v| v.is_zero()));
     }
 }
