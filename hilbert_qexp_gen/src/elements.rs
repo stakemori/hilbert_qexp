@@ -7,6 +7,7 @@ use std::ops::{AddAssign, MulAssign, DivAssign, SubAssign, ShlAssign, ShrAssign,
 use std::cmp::min;
 use bignum::{BigNumber, RealQuadElement};
 use flint::fmpz::Fmpz;
+use flint::fmpq::Fmpq;
 use fcvec;
 
 type Weight = Option<(usize, usize)>;
@@ -800,6 +801,20 @@ where
             _mul_mut_tmp(&mut tmp, u, v, &f.fcvec, &other.fcvec, &self.u_bds, self.m);
             self.fcvec.fc_ref_mut(v, u, bd).set_g(&tmp);
             })
+    }
+}
+
+impl<'a, T> MulAssign<&'a Fmpq> for HmfGen<T>
+where
+    T: BigNumber,
+    T: RealQuadElement<Fmpq>,
+    for<'b> T: MulAssign<&'b Fmpq>,
+{
+    fn mul_assign(&mut self, other: &Fmpq) {
+        v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
+            *self.fcvec.fc_ref_mut(v, u, bd) *= other;
+        }
+        );
     }
 }
 
