@@ -1,5 +1,5 @@
 use elements::HmfGen;
-use bignum::BigNumber;
+use bignum::{BigNumber, RealQuadElement};
 use flint::fmpq::Fmpq;
 use flint::fmpz::Fmpz;
 use std::ops::{MulAssign, AddAssign};
@@ -52,7 +52,7 @@ pub struct NotHhmError {}
 
 pub fn rankin_cohen<T>(n: usize, f: &HmfGen<T>, g: &HmfGen<T>) -> Result<HmfGen<T>, NotHhmError>
 where
-    T: BigNumber + From<(i64, u64)> + Clone,
+    T: BigNumber + From<(i64, u64)> + Clone + RealQuadElement<Fmpq>,
     for<'a> T: MulAssign<&'a Fmpq>,
     for<'a> T: AddAssign<&'a T>,
 {
@@ -73,9 +73,10 @@ where
             tmp_z1.bi_uiui_mut((n + l2 - 1) as u64, i as u64);
             tmp_z *= &tmp_z1;
             tmp_z *= sgn;
-            sgn *= -1;
             diff_mul(&mut tmp, (0, i), (0, n - i), &f, &g);
+            tmp *= &Into::<Fmpq>::into(&tmp_z);
             res += &tmp;
+            sgn *= -1;
         }
         res.weight = Some((k1 + l1, k2 + l2 + 2 * n));
         Ok(res)

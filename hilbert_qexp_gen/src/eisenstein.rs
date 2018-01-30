@@ -111,6 +111,7 @@ pub fn eisenstein_series_from_lvals(
             }
         }
     });
+    res.weight = Some((k as usize , k as usize));
     res
 }
 

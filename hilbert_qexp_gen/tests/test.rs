@@ -1,11 +1,13 @@
 extern crate hilbert_qexp;
 extern crate flint;
 
-mod square_root {
+mod sqrt5 {
     use hilbert_qexp::eisenstein::eisenstein_series_from_lvals;
     use flint::fmpq::Fmpq;
     use hilbert_qexp::elements::{HmfGen, square_root_mut};
     use hilbert_qexp::misc::PowGen;
+    use hilbert_qexp::diff_op::rankin_cohen;
+    use hilbert_qexp::bignum::Sqrt5Q;
 
     fn eisenstein_sqrt5(k: usize, prec: usize) -> HmfGen<Fmpq> {
         assert!(k == 2 || k == 6 || k == 10);
@@ -57,6 +59,21 @@ mod square_root {
         let g5 = g5_normalized(prec);
         let g10 = g5_squared(prec);
         assert_eq!(&g5 * &g5, g10);
+    }
+
+    #[test]
+    fn test_rankin_cohen() {
+        let prec = 5;
+        let g2: HmfGen<Sqrt5Q> = From::from(&eisenstein_sqrt5(2, prec));
+        let mut f = rankin_cohen(2, &g2, &g2).unwrap();
+        let a: Sqrt5Q = From::from((4320, -1440_i64));
+        let b: Sqrt5Q = From::from((3, -1_i64));
+        f /= &a;
+        f *= &b;
+        for x in f.diagonal_restriction().iter() {
+            println!("{}", x);
+        }
+        println!("{}", f);
     }
 }
 
