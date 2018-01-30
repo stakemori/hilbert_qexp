@@ -7,7 +7,6 @@ use std::ops::{AddAssign, MulAssign, DivAssign, SubAssign, ShlAssign, ShrAssign,
 use std::cmp::min;
 use bignum::{BigNumber, RealQuadElement};
 use flint::fmpz::Fmpz;
-use std::convert::From;
 use fcvec;
 
 type Weight = Option<(usize, usize)>;
@@ -95,11 +94,11 @@ pub struct FcVec<T> {
     pub vec: Vec<Vec<T>>,
 }
 
-impl<'a, T> From<&'a FcVec<Fmpz>> for FcVec<T>
+impl<'a, T, S> From<&'a FcVec<S>> for FcVec<T>
 where
-    for<'b> T: From<&'b Fmpz>,
+    for<'b> T: From<&'b S>,
 {
-    fn from(a: &FcVec<Fmpz>) -> FcVec<T> {
+    fn from(a: &FcVec<S>) -> FcVec<T> {
         Self {
             vec: a.vec
                 .iter()
@@ -215,11 +214,11 @@ pub fn weight_div(a: Weight, b: Weight) -> Weight {
     a.and_then(|x| b.and_then(|y| Some((x.0 - y.0, x.1 - y.1))))
 }
 
-impl<'a, T> From<&'a HmfGen<Fmpz>> for HmfGen<T>
+impl<'a, T, S> From<&'a HmfGen<S>> for HmfGen<T>
 where
-    for<'b> T: From<&'b Fmpz>,
+    for<'b> T: From<&'b S>,
 {
-    fn from(f: &HmfGen<Fmpz>) -> Self {
+    fn from(f: &HmfGen<S>) -> Self {
         let fcvec = From::from(&f.fcvec);
         let u_bds = f.u_bds.clone();
         Self {

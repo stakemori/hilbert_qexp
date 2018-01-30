@@ -772,6 +772,19 @@ macro_rules! impl_quad_elt {
                 }
             }
         }
+
+        impl<'a> From<&'a Fmpq> for $name {
+            fn from(x: &'a Fmpq) -> Self {
+                let mut rt = Fmpq::new();
+                let mut ir = Fmpq::new();
+                rt.set(x);
+                ir.set_zero();
+                $name {
+                    rt: rt,
+                    ir: ir,
+                }
+            }
+        }
     }
 }
 
