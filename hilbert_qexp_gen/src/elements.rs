@@ -8,6 +8,7 @@ use std::cmp::min;
 use bignum::{BigNumber, RealQuadElement};
 use flint::fmpz::Fmpz;
 use flint::fmpq::Fmpq;
+use flint::traits::*;
 use fcvec;
 
 type Weight = Option<(usize, usize)>;

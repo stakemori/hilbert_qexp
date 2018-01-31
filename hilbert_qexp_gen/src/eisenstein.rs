@@ -3,6 +3,8 @@ use bignum::BigNumber;
 use flint::fmpz::{Fmpz, FmpzFactor};
 use flint::fmpq::Fmpq;
 use flint::ulong_extras;
+use flint::traits::*;
+
 use gmp::mpz::Mpz;
 
 fn norm_realquad(u: i64, v: i64, m: u64) -> i64 {

@@ -5,6 +5,7 @@ use std::ops::{AddAssign, SubAssign, ShlAssign, ShrAssign, MulAssign, DivAssign}
 use std;
 use flint::fmpz_poly::FmpzPoly;
 use flint::fmpq::Fmpq;
+use flint::traits::*;
 
 pub trait RealQuadElement<S> {
     fn rt_part(&self) -> S;
@@ -211,7 +212,7 @@ pub struct Sqrt5Z {
 impl<'a> From<&'a Fmpz> for Sqrt5Z {
     fn from(a: &Fmpz) -> Self {
         let mut rt = Fmpz::new();
-        rt.set(&a);
+        rt.set(a);
         rt <<= 1;
         Self {
             rt: rt,
@@ -393,7 +394,7 @@ impl BigNumber for Sqrt5Z {
             rt: ref c,
             ir: ref d,
         } = other;
-        tmp.set(b);
+        tmp.set(b as &Fmpz);
         *b *= c;
         b.addmul_mut(a, d);
         *b >>= 1;
@@ -435,12 +436,12 @@ impl fmt::Display for Sqrt5Z {
         } else {
             let mut tmp_ply = FmpzPoly::new();
             if self.ir.is_even() {
-                tmp_ply.set_coeff(&(&self.rt >> 1), 0);
-                tmp_ply.set_coeff(&(&self.ir >> 1), 1);
+                tmp_ply.set_coeff(0, &(&self.rt >> 1));
+                tmp_ply.set_coeff(1, &(&self.ir >> 1));
                 write!(f, "{}", tmp_ply)
             } else {
-                tmp_ply.set_coeff(&(self.rt), 0);
-                tmp_ply.set_coeff(&(&self.ir), 1);
+                tmp_ply.set_coeff(0, &(self.rt));
+                tmp_ply.set_coeff(1, &(&self.ir));
                 write!(f, "({})/2", tmp_ply)
             }
         }
@@ -635,7 +636,7 @@ macro_rules! impl_quad_elt {
                     rt: ref c,
                     ir: ref d,
                 } = other;
-                tmp.set(b);
+                tmp.set(b as &Fmpq);
                 *b *= c;
                 b.addmul_mut(a, d);
 
