@@ -29,15 +29,18 @@ pub struct HmfGen<T> {
     pub m: u64,
 }
 
+#[macro_export]
 macro_rules! is_1mod4 {
     ($expr: expr) => {($expr) & 0b11 == 1}
 }
 
 
+#[macro_export]
 macro_rules! is_even {
     ($expr: expr) => {($expr) & 1 == 0}
 }
 
+#[macro_export]
 macro_rules! u_iter {
     ($m: expr, $v: expr, $bd: ident) => {
         {
@@ -46,6 +49,7 @@ macro_rules! u_iter {
     }
 }
 
+#[macro_export]
 macro_rules! v_u_bd_iter {
     (($m: expr, $u_bds: expr, $v: ident, $u: ident, $bd: ident) $body:expr) =>
     {
