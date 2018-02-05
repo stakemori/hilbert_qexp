@@ -16,6 +16,12 @@ mod parallel {
     }
 
     #[test]
+    fn test_s5() {
+        let s5 = s5_form(5);
+        println!("{}", s5);
+    }
+
+    #[test]
     fn test_s9() {
         let s9 = s9_form(5);
         println!("{}", s9);
