@@ -18,6 +18,10 @@ pub fn eisensten_series(k: u64, prec: usize) -> HmfGen<Fmpq> {
     eisenstein_series_from_lvals(k, 2, num, den, prec)
 }
 
+pub fn s2_form(prec: usize) -> HmfGen<Fmpq> {
+    eisensten_series(2, prec)
+}
+
 pub fn s4_form(prec: usize) -> HmfGen<Fmpq> {
     let g2 = eisensten_series(2, prec);
     let g4 = eisensten_series(4, prec);
