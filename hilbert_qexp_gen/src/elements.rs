@@ -6,10 +6,13 @@ use std::ops::{AddAssign, MulAssign, DivAssign, SubAssign, ShlAssign, ShrAssign,
                Add};
 use std::cmp::min;
 use bignum::{BigNumber, RealQuadElement};
+
+use fcvec;
 use flint::fmpz::Fmpz;
 use flint::fmpq::Fmpq;
 use flint::traits::*;
-use fcvec;
+use flint::fmpz_mat::FmpzMat;
+
 
 type Weight = Option<(usize, usize)>;
 /// struct for hilbert modualr form over Q(sqrt(m))
@@ -1070,6 +1073,19 @@ where
         assert_eq!(f, f1);
     }
     dnm
+}
+
+pub fn relations_over_z(forms: &[HmfGen<Fmpz>]) -> Vec<Vec<Fmpz>> {
+    let vv: Vec<_> = forms.iter().map(|f| f.fc_vector_u_nonneg()).collect();
+    let n = forms.len();
+    let m = vv[0].len();
+    let mut mat = FmpzMat::new(m as i64, n as i64);
+    for (i, v) in vv.iter().enumerate() {
+        for (j, x) in v.iter().enumerate() {
+            mat.set_entry(j as isize, i as isize, x);
+        }
+    }
+    mat.nullspace_basis()
 }
 
 #[cfg(test)]
