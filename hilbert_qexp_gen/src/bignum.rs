@@ -542,6 +542,10 @@ macro_rules! impl_quad_elt {
                     ir: From::from((ir, 1)),
                 }
             }
+
+            pub fn is_real(&self) -> bool {
+                self.ir.is_zero()
+            }
         }
 
         impl BigNumber for $name {
