@@ -21,24 +21,24 @@ where
 }
 
 
-fn proj_f9_part<T>(f: &HmfGen<T>, f9: &HmfGen<T>) -> HmfGen<T>
+fn proj_s9_part<T>(f: &HmfGen<T>, s9: &HmfGen<T>) -> HmfGen<T>
 where
-    T: BigNumber + Clone + MulAssign<u64> + ShrAssign<usize>,
+    T: BigNumber + Clone + ShrAssign<u64>,
     for<'a> T: SubAssign<&'a T>,
 {
     let mut tmp = HmfGen::new(f.m, f.prec);
     star_op(&mut tmp, f);
-    let g = &tmp + f;
+    let g = f - &tmp;
     let mut tmp1 = HmfGen::new(f.m, f.prec);
-    div_mut(&mut tmp1, &g, f9);
-    tmp1 >>= 1;
+    div_mut(&mut tmp1, &g, s9);
+    tmp1 >>= 1_u64;
     tmp1
 }
 
 
 pub fn bracket_inner_prod<T>(f: &HmfGen<T>, g: &HmfGen<T>) -> HmfGen<T>
 where
-    T: BigNumber + Clone + MulAssign<u64> + ShrAssign<usize>,
+    T: BigNumber + Clone + ShrAssign<u64>,
     for<'a> T: AddAssign<&'a T>,
     for<'a> T: SubAssign<&'a T>,
     for<'a> T: From<&'a Fmpq>,
@@ -48,5 +48,23 @@ where
     star_op(&mut tmp, g);
     tmp *= f;
     let s9 = s9_form(prec);
-    proj_f9_part(&tmp, &Into::<HmfGen<T>>::into(&s9))
+    proj_s9_part(&tmp, &Into::<HmfGen<T>>::into(&s9))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_proj_s9() {
+        let prec = 5;
+        let s4 = s4_form(prec);
+        let s6 = s6_form(prec);
+        let mut s5 = s5_form(prec);
+        let s9 = s9_form(prec);
+        let f = &(&(s4.pow(2)) * &s6) + &(&s5 * &s9);
+        let g = proj_s9_part(&f, &s9);
+        s5.decrease_prec(prec - 1);
+        assert_eq!(g, s5);
+    }
 }
