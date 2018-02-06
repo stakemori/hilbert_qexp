@@ -860,11 +860,12 @@ where
     }
 }
 
-impl<T> ShlAssign<usize> for HmfGen<T>
+impl<T, S> ShlAssign<S> for HmfGen<T>
 where
-    T: BigNumber + ShlAssign<usize>,
+    T: BigNumber + ShlAssign<S>,
+    S: Copy,
 {
-    fn shl_assign(&mut self, other: usize) {
+    fn shl_assign(&mut self, other: S) {
         v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             T::shl_assign(self.fcvec.fc_ref_mut(v, u, bd), other);
         }
@@ -873,11 +874,12 @@ where
 }
 
 
-impl<T> ShrAssign<usize> for HmfGen<T>
+impl<T, S> ShrAssign<S> for HmfGen<T>
 where
-    T: BigNumber + ShrAssign<usize>,
+    T: BigNumber + ShrAssign<S>,
+    S: Copy,
 {
-    fn shr_assign(&mut self, other: usize) {
+    fn shr_assign(&mut self, other: S) {
         v_u_bd_iter!((self.m, self.u_bds, v, u, bd) {
             T::shr_assign(self.fcvec.fc_ref_mut(v, u, bd), other);
         }
