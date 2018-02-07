@@ -9,11 +9,3 @@ pub mod eisenstein;
 pub mod misc;
 pub mod diff_op;
 mod fcvec;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
