@@ -12,7 +12,7 @@ use flint::fmpz::Fmpz;
 use flint::fmpq::Fmpq;
 use flint::traits::*;
 use flint::fmpz_mat::FmpzMat;
-
+use flint::fmpq_mat::FmpqMat;
 
 type Weight = Option<(usize, usize)>;
 /// struct for hilbert modualr form over Q(sqrt(m))
@@ -1086,6 +1086,19 @@ pub fn relations_over_z(forms: &[HmfGen<Fmpz>]) -> Vec<Vec<Fmpz>> {
         }
     }
     mat.nullspace_basis()
+}
+
+pub fn relations_over_q(forms: &[HmfGen<Fmpq>]) -> Vec<Vec<Fmpq>> {
+    let vv: Vec<_> = forms.iter().map(|f| f.fc_vector_u_nonneg()).collect();
+    let n = forms.len();
+    let m = vv[0].len();
+    let mut mat = FmpqMat::new(m as i64, n as i64);
+    for (i, v) in vv.iter().enumerate() {
+        for (j, x) in v.iter().enumerate() {
+            mat.set_entry(j as isize, i as isize, x);
+        }
+    }
+    mat.right_kernel_basis()
 }
 
 #[cfg(test)]

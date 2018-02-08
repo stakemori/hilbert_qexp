@@ -80,7 +80,7 @@ mod sqrt5 {
 mod eisen_sqrt2 {
     use hilbert_qexp::eisenstein::eisenstein_series_from_lvals;
     use flint::fmpq::Fmpq;
-    use hilbert_qexp::elements::HmfGen;
+    use hilbert_qexp::elements::{HmfGen, relations_over_q};
     // use hilbert_qexp::misc::PowGen;
 
     fn eisenstein_sqrt2(k: u64, prec: usize) -> HmfGen<Fmpq> {
@@ -124,5 +124,16 @@ mod eisen_sqrt2 {
         let mut f = f4(5);
         f /= &From::from((-576, 11));
         assert!(f.diagonal_restriction().iter().all(|v| v.is_zero()));
+    }
+
+    #[test]
+    fn test_relations() {
+        let prec = 5;
+        let f = eisenstein_sqrt2(2, prec);
+        let forms = vec![f.clone(), &f * 2];
+        let v = relations_over_q(&forms);
+        assert_eq!(v.len(), 1);
+        assert_eq!(v[0].len(), 2);
+        assert_eq!(v[0][0], &v[0][1] * (-2));
     }
 }
