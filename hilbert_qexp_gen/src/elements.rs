@@ -117,24 +117,24 @@ where
     }
 }
 
-impl<T> RealQuadElement<FcVec<Fmpz>> for FcVec<T>
+impl<T, S> RealQuadElement<FcVec<S>> for FcVec<T>
 where
-    T: RealQuadElement<Fmpz>,
+    T: RealQuadElement<S>,
 {
-    fn ir_part(&self) -> FcVec<Fmpz> {
+    fn ir_part(&self) -> FcVec<S> {
         let vec = self.vec
             .iter()
             .map(|v| v.iter().map(|x| x.ir_part()).collect())
             .collect();
-        FcVec::<Fmpz> { vec: vec }
+        FcVec::<S> { vec: vec }
     }
 
-    fn rt_part(&self) -> FcVec<Fmpz> {
+    fn rt_part(&self) -> FcVec<S> {
         let vec = self.vec
             .iter()
             .map(|v| v.iter().map(|x| x.rt_part()).collect())
             .collect();
-        FcVec::<Fmpz> { vec: vec }
+        FcVec::<S> { vec: vec }
     }
 }
 
@@ -250,12 +250,12 @@ where
     }
 }
 
-impl<T> RealQuadElement<HmfGen<Fmpz>> for HmfGen<T>
+impl<T, S> RealQuadElement<HmfGen<S>> for HmfGen<T>
 where
-    T: RealQuadElement<Fmpz>,
+    T: RealQuadElement<S>,
 {
-    fn rt_part(&self) -> HmfGen<Fmpz> {
-        HmfGen::<Fmpz> {
+    fn rt_part(&self) -> HmfGen<S> {
+        HmfGen::<S> {
             weight: self.weight,
             prec: self.prec,
             fcvec: self.fcvec.rt_part(),
@@ -264,8 +264,8 @@ where
         }
     }
 
-    fn ir_part(&self) -> HmfGen<Fmpz> {
-        HmfGen::<Fmpz> {
+    fn ir_part(&self) -> HmfGen<S> {
+        HmfGen::<S> {
             weight: self.weight,
             prec: self.prec,
             fcvec: self.fcvec.ir_part(),
