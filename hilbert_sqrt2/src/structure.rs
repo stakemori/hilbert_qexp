@@ -2,7 +2,6 @@ use hilbert_qexp::diff_op::rankin_cohen;
 use hilbert_qexp::elements::{HmfGen, relations_over_q, div_mut};
 use hilbert_qexp::bignum::Sqrt2Q;
 use parallel_wt::*;
-use mixed_wt::*;
 use flint::fmpq::Fmpq;
 
 /// Corresponds to s2^a * s4^b * s6^c where (a, b, c) = idx.
@@ -89,40 +88,21 @@ pub fn three_forms_a1_0(prec: usize) -> Vec<HmfGen<Sqrt2Q>> {
     ]
 }
 
-fn div_by_s5(f: &HmfGen<Fmpq>) -> HmfGen<Fmpq> {
+pub fn three_forms_a1_1(prec: usize) -> Vec<HmfGen<Sqrt2Q>> {
+    let s2 = Into::<HmfGen<Sqrt2Q>>::into(&s2_form(prec));
+    let s4 = Into::<HmfGen<Sqrt2Q>>::into(&s4_form(prec));
+    let s6 = Into::<HmfGen<Sqrt2Q>>::into(&s6_form(prec));
+    let s5 = Into::<HmfGen<Sqrt2Q>>::into(&s5_form(prec));
+    vec![
+        rankin_cohen(1, &s2, &s5).unwrap(),
+        rankin_cohen(1, &s4, &s5).unwrap(),
+        rankin_cohen(1, &s6, &s5).unwrap(),
+    ]
+}
+
+pub fn div_by_s5(f: &HmfGen<Fmpq>) -> HmfGen<Fmpq> {
     let s5 = s5_form(f.prec);
     let mut res = HmfGen::new(2, f.prec);
     div_mut(&mut res, f, &s5);
     res
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use hilbert_qexp::bignum::RealQuadElement;
-
-    #[test]
-    fn br_a1_0() {
-        let prec = 6;
-        let forms = three_forms_a1_0(prec);
-        let br01 = bracket_inner_prod(&forms[0], &forms[1]);
-        assert!(br01.rt_part().is_zero());
-        let f01 = div_by_s5(&br01.ir_part());
-        // println!("{}", &f - &(&s2_form(prec -2) * 4));
-        let pl01 = r_elt_as_pol_over_q(&f01);
-        println!("{:?}", pl01);
-
-        let br02 = bracket_inner_prod(&forms[0], &forms[2]);
-        let br12 = bracket_inner_prod(&forms[1], &forms[2]);
-        assert!(br02.rt_part().is_zero());
-        assert!(br12.rt_part().is_zero());
-
-        let f02 = div_by_s5(&br02.ir_part());
-        let f12 = div_by_s5(&br12.ir_part());
-        let pl02 = r_elt_as_pol_over_q(&f02);
-        let pl12 = r_elt_as_pol_over_q(&f12);
-        println!("{:?}", pl02);
-        println!("{:?}", pl12);
-    }
 }
