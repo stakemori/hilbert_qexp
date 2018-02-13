@@ -61,4 +61,28 @@ mod structure {
         println!("{:?}", pl02);
         println!("{:?}", pl12);
     }
+
+    #[test]
+    fn br_a1_1() {
+        let prec = 6;
+        let forms = three_forms_a1_1(prec);
+        let br01 = bracket_inner_prod(&forms[0], &forms[1]);
+        let br02 = bracket_inner_prod(&forms[0], &forms[2]);
+        let br12 = bracket_inner_prod(&forms[1], &forms[2]);
+        assert!(br01.rt_part().is_zero());
+        assert!(br02.rt_part().is_zero());
+        assert!(br12.rt_part().is_zero());
+
+        let f01 = div_by_s5(&br01.ir_part());
+        let f02 = div_by_s5(&br02.ir_part());
+        let f12 = div_by_s5(&br12.ir_part());
+
+        let pl01 = r_elt_as_pol_over_q(&f01);
+        let pl02 = r_elt_as_pol_over_q(&f02);
+        let pl12 = r_elt_as_pol_over_q(&f12);
+        println!("{:?}", pl01);
+        println!("{:?}", pl02);
+        println!("{:?}", pl12);
+
+    }
 }
