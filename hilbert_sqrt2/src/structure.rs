@@ -106,3 +106,34 @@ pub fn div_by_s5(f: &HmfGen<Fmpq>) -> HmfGen<Fmpq> {
     div_mut(&mut res, f, &s5);
     res
 }
+
+type Tuple3 = (usize, usize, usize);
+
+pub fn mixed_weight_forms(
+    df: usize,
+    prec: usize,
+    len: usize,
+) -> Vec<(HmfGen<Sqrt2Q>, Tuple3, Tuple3)> {
+    let mut num = 0;
+    let mut res = Vec::with_capacity(len);
+    for (i, m) in (2..).flat_map(monoms_of_s2_s4_s6).enumerate() {
+        for n in (2..).flat_map(monoms_of_s2_s4_s6).take(if is_even!(df) {
+            i + 1
+        } else {
+            i
+        })
+        {
+            if num >= len {
+                return res;
+            }
+            let f_m = m.to_form(prec);
+            let f_n = n.to_form(prec);
+            let f = rankin_cohen(df, &From::from(&f_m), &From::from(&f_n)).unwrap();
+            if !f.is_zero() {
+                num += 1;
+                res.push((f, m.idx, n.idx));
+            }
+        }
+    }
+    res
+}
