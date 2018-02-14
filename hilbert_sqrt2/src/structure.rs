@@ -45,9 +45,9 @@ impl MonomFormal {
 pub fn tpls_of_wt(k: usize) -> Vec<(usize, usize, usize)> {
     let mut res = Vec::new();
     let c_max = k / 6;
-    for c in 0..(c_max + 1) {
+    for c in (0..(c_max + 1)).rev() {
         let b_max = (k - 6 * c) / 4;
-        for b in 0..(b_max + 1) {
+        for b in (0..(b_max + 1)).rev() {
             let rem = k - (6 * c + 4 * b);
             if is_even!(rem) {
                 res.push((rem >> 1, b, c));
@@ -121,24 +121,26 @@ pub fn mixed_weight_forms(
     prec: usize,
     len: usize,
 ) -> Vec<(HmfGen<Sqrt2Q>, Tuple3, Tuple3)> {
+    if is_odd {
+        mixed_weight_forms_odd(df, prec, len)
+    } else {
+        mixed_weight_forms_even(df, prec, len)
+    }
+}
+
+pub fn mixed_weight_forms_even(
+    df: usize,
+    prec: usize,
+    len: usize,
+) -> Vec<(HmfGen<Sqrt2Q>, Tuple3, Tuple3)> {
     let mut num = 0;
     let mut res = Vec::with_capacity(len);
-    let s5 = if !is_odd {
-        None
-    } else {
-        Some(s5_form(prec))
-    };
-    let beg = if is_odd { 0 } else { 2 };
-    // Todo remove the case when the RC is zero.
-    for m in (beg..).flat_map(monoms_of_s2_s4_s6) {
-        for n in (2..).flat_map(monoms_of_s2_s4_s6) {
+    for (i, m) in (2..).flat_map(monoms_of_s2_s4_s6).enumerate() {
+        for n in (2..).flat_map(monoms_of_s2_s4_s6).take(i + 1) {
             if num >= len {
                 return res;
             }
-            let mut f_m = m.to_form(prec);
-            if is_odd {
-                f_m *= s5.as_ref().unwrap();
-            }
+            let f_m = m.to_form(prec);
             let f_n = n.to_form(prec);
             if let Ok(f) = rankin_cohen(df, &From::from(&f_m), &From::from(&f_n)) {
                 if !f.is_zero() {
@@ -148,6 +150,32 @@ pub fn mixed_weight_forms(
             } else {
                 panic!();
             }
+        }
+    }
+    res
+}
+
+pub fn mixed_weight_forms_odd(
+    df: usize,
+    prec: usize,
+    len: usize,
+) -> Vec<(HmfGen<Sqrt2Q>, Tuple3, Tuple3)> {
+    let mut num = 0;
+    let mut res = Vec::with_capacity(len);
+    let s5 = s5_form(prec);
+    for n in (2..).flat_map(monoms_of_s2_s4_s6) {
+        if num >= len {
+            return res;
+        }
+        let f_n = n.to_form(prec);
+
+        if let Ok(f) = rankin_cohen(df, &From::from(&s5.clone()), &From::from(&f_n)) {
+            if !f.is_zero() {
+                num += 1;
+                res.push((f, (0, 0, 0), n.idx));
+            }
+        } else {
+            panic!();
         }
     }
     res
@@ -200,7 +228,7 @@ where
     f.write(&v).unwrap();
 }
 
-pub fn save_brackets_for_candidates<'a, I>(vals_iter: I)
+pub fn save_brackets_for_candidates<'a, I>(vals_iter: I, len: usize)
 where
     I: Iterator<Item = &'a (usize, u32)>,
 {
@@ -209,7 +237,7 @@ where
         let parity = i_parity.1;
         println!("{}, {}", i, parity);
         let prec = (2 * i + 6) / 5 + 10;
-        let forms_w_monoms = mixed_weight_forms(i, !is_even!(parity), prec, 6);
+        let forms_w_monoms = mixed_weight_forms(i, !is_even!(parity), prec, len);
 
         {
             let monoms = forms_w_monoms

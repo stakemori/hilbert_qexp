@@ -88,6 +88,6 @@ mod structure {
 
     #[test]
     fn save_cand_brs() {
-        save_brackets_for_candidates([(1, 0), (1, 1), (2, 0), (2, 1)].iter());
+        save_brackets_for_candidates([(1, 0), (1, 1), (2, 0), (2, 1)].iter(), 10);
     }
 }
