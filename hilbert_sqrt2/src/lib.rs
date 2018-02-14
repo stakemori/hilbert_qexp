@@ -3,8 +3,6 @@ extern crate hilbert_qexp;
 extern crate flint;
 extern crate gmp;
 
-#[macro_use]
-extern crate serde_derive;
 extern crate serde;
 extern crate serde_pickle;
 
