@@ -85,4 +85,9 @@ mod structure {
         println!("{:?}", pl12);
 
     }
+
+    #[test]
+    fn save_cand_brs() {
+        save_brackets_for_candidates([(1, 0), (1, 1), (2, 0), (2, 1)].iter());
+    }
 }

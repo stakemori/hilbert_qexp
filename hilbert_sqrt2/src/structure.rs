@@ -117,36 +117,36 @@ type Tuple3 = (usize, usize, usize);
 
 pub fn mixed_weight_forms(
     df: usize,
+    is_odd: bool,
     prec: usize,
     len: usize,
 ) -> Vec<(HmfGen<Sqrt2Q>, Tuple3, Tuple3)> {
     let mut num = 0;
     let mut res = Vec::with_capacity(len);
-    let s5 = if is_even!(df) {
+    let s5 = if !is_odd {
         None
     } else {
         Some(s5_form(prec))
     };
-    let beg = if is_even!(df) { 2 } else { 0 };
-    for (i, m) in (beg..).flat_map(monoms_of_s2_s4_s6).enumerate() {
-        for n in (2..).flat_map(monoms_of_s2_s4_s6).take(if is_even!(df) {
-            i + 1
-        } else {
-            i
-        })
-        {
+    let beg = if is_odd { 0 } else { 2 };
+    // Todo remove the case when the RC is zero.
+    for m in (beg..).flat_map(monoms_of_s2_s4_s6) {
+        for n in (2..).flat_map(monoms_of_s2_s4_s6) {
             if num >= len {
                 return res;
             }
             let mut f_m = m.to_form(prec);
-            if !is_even!(df) {
+            if is_odd {
                 f_m *= s5.as_ref().unwrap();
             }
             let f_n = n.to_form(prec);
-            let f = rankin_cohen(df, &From::from(&f_m), &From::from(&f_n)).unwrap();
-            if !f.is_zero() {
-                num += 1;
-                res.push((f, m.idx, n.idx));
+            if let Ok(f) = rankin_cohen(df, &From::from(&f_m), &From::from(&f_n)) {
+                if !f.is_zero() {
+                    num += 1;
+                    res.push((f, m.idx, n.idx));
+                }
+            } else {
+                panic!();
             }
         }
     }
@@ -208,8 +208,8 @@ where
         let i = i_parity.0;
         let parity = i_parity.1;
         println!("{}, {}", i, parity);
-        let prec = (2 * i + 6) / 5 + 2;
-        let forms_w_monoms = mixed_weight_forms(i, prec, 6);
+        let prec = (2 * i + 6) / 5 + 15;
+        let forms_w_monoms = mixed_weight_forms(i, !is_even!(parity), prec, 6);
 
         {
             let monoms = forms_w_monoms
@@ -227,6 +227,7 @@ where
                 .iter()
                 .map(|f| f.0.weight.unwrap().0)
                 .collect::<Vec<_>>();
+            println!("{:?}", weights);
             let ref mut weights_file =
                 File::create(format!("./data/str{}_{}_weights.sobj", i, parity)).unwrap();
             save_as_pickle(&weights, weights_file);
