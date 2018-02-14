@@ -152,3 +152,103 @@ pub fn mixed_weight_forms(
     }
     res
 }
+
+pub type ParaWtPolyQ = Vec<(MonomFormal, Fmpq)>;
+
+/// If the bracket of f an g is of odd weight, this returns a modular form
+/// divided by s5.
+pub fn bracket_inner_prod_as_pol_over_q(
+    f: &HmfGen<Sqrt2Q>,
+    g: &HmfGen<Sqrt2Q>,
+) -> Option<ParaWtPolyQ> {
+    let h = bracket_inner_prod(f, g);
+    if h.is_zero() {
+        return Some(vec![]);
+    }
+    if !h.rt_part().is_zero() {
+        None
+    } else {
+        let h_ir = h.ir_part();
+        if is_even!(h_ir.weight.unwrap().0) {
+            r_elt_as_pol_over_q(&h_ir)
+        } else {
+            let f = div_by_s5(&h_ir);
+            r_elt_as_pol_over_q(&f)
+        }
+    }
+}
+
+pub fn brackets(forms: &[HmfGen<Sqrt2Q>]) -> Vec<ParaWtPolyQ> {
+    forms
+        .iter()
+        .enumerate()
+        .flat_map(|(i, f)| {
+            forms
+                .iter()
+                .skip(i + 1)
+                .map(|g| bracket_inner_prod_as_pol_over_q(f, g).unwrap())
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+pub fn save_as_pickle<T>(a: T, f: &mut File)
+where
+    T: serde::Serialize,
+{
+    let v = serde_pickle::to_vec(&a, false).unwrap();
+    f.write(&v).unwrap();
+}
+
+pub fn save_brackets_for_candidates<I>(vals_iter: I)
+where
+    I: Iterator<Item = (usize, u32)>,
+{
+    for i_parity in vals_iter {
+        let i = i_parity.0;
+        let parity = i_parity.1;
+        println!("{}, {}", i, parity);
+        let prec = (2 * i + 6) / 5 + 2;
+        let forms_w_monoms = mixed_weight_forms(i, prec, 6);
+
+        {
+            let monoms = forms_w_monoms
+                .iter()
+                .map(|f_t| (f_t.1, f_t.2))
+                .collect::<Vec<_>>();
+            let ref mut monms_file =
+                File::create(format!("./data/str{}_{}_monoms.sobj", i, parity)).unwrap();
+
+            save_as_pickle(&monoms, monms_file);
+        }
+
+        {
+            let weights = forms_w_monoms
+                .iter()
+                .map(|f| f.0.weight.unwrap().0)
+                .collect::<Vec<_>>();
+            let ref mut weights_file =
+                File::create(format!("./data/str{}_{}_weights.sobj", i, parity)).unwrap();
+            save_as_pickle(&weights, weights_file);
+        }
+
+        {
+            let forms = forms_w_monoms
+                .clone()
+                .into_iter()
+                .map(|f| f.0)
+                .collect::<Vec<_>>();
+            let brs = brackets(&forms);
+            let brs = brs.iter()
+                .map(|br| {
+                    br.iter()
+                        .map(|x| (x.0.idx, x.1.clone()))
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>();
+            let ref mut br_file = File::create(format!("./data/str{}_{}_brs.sobj", i, parity))
+                .unwrap();
+            save_as_pickle(&brs, br_file);
+        }
+    }
+}
