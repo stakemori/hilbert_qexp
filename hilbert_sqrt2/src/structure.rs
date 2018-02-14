@@ -1,8 +1,14 @@
 use hilbert_qexp::diff_op::rankin_cohen;
 use hilbert_qexp::elements::{HmfGen, relations_over_q, div_mut};
 use hilbert_qexp::bignum::Sqrt2Q;
+use hilbert_qexp::bignum::RealQuadElement;
 use parallel_wt::*;
+use mixed_wt::*;
 use flint::fmpq::Fmpq;
+use std::fs::File;
+use serde;
+use serde_pickle;
+use std::io::Write;
 
 /// Corresponds to s2^a * s4^b * s6^c where (a, b, c) = idx.
 #[derive(Clone, Debug)]
@@ -116,7 +122,13 @@ pub fn mixed_weight_forms(
 ) -> Vec<(HmfGen<Sqrt2Q>, Tuple3, Tuple3)> {
     let mut num = 0;
     let mut res = Vec::with_capacity(len);
-    for (i, m) in (2..).flat_map(monoms_of_s2_s4_s6).enumerate() {
+    let s5 = if is_even!(df) {
+        None
+    } else {
+        Some(s5_form(prec))
+    };
+    let beg = if is_even!(df) { 2 } else { 0 };
+    for (i, m) in (beg..).flat_map(monoms_of_s2_s4_s6).enumerate() {
         for n in (2..).flat_map(monoms_of_s2_s4_s6).take(if is_even!(df) {
             i + 1
         } else {
@@ -126,7 +138,10 @@ pub fn mixed_weight_forms(
             if num >= len {
                 return res;
             }
-            let f_m = m.to_form(prec);
+            let mut f_m = m.to_form(prec);
+            if !is_even!(df) {
+                f_m *= s5.as_ref().unwrap();
+            }
             let f_n = n.to_form(prec);
             let f = rankin_cohen(df, &From::from(&f_m), &From::from(&f_n)).unwrap();
             if !f.is_zero() {

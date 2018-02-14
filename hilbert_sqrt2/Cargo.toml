@@ -7,6 +7,9 @@ authors = ["Sho Takemori <stakemorii@gmail.com>"]
 rust-gmp = { git = "https://github.com/stakemori/rust-gmp.git", branch = "develop"}
 flint = { git = "https://github.com/stakemori/flint-rust.git"}
 libc = "0.2"
+serde = "*"
+serde_derive = "1.0"
+serde-pickle = "*"
 
 [dependencies.hilbert_qexp]
 path = "../hilbert_qexp_gen"
