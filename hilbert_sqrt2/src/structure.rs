@@ -200,9 +200,9 @@ where
     f.write(&v).unwrap();
 }
 
-pub fn save_brackets_for_candidates<I>(vals_iter: I)
+pub fn save_brackets_for_candidates<'a, I>(vals_iter: I)
 where
-    I: Iterator<Item = (usize, u32)>,
+    I: Iterator<Item = &'a (usize, u32)>,
 {
     for i_parity in vals_iter {
         let i = i_parity.0;
