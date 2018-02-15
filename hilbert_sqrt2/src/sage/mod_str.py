@@ -1,11 +1,12 @@
 # -*- coding: utf-8; mode: sage -*-
 from os.path import join
+from pickle import Pickler
 
 from itertools import takewhile
 from sage.libs.singular.function import singular_function
 
 from sage.all import (FreeModule, PolynomialRing,
-                      TermOrder, cached_method, gcd, load, QQ, cached_function)
+                      TermOrder, cached_method, gcd, load, QQ, cached_function, ZZ)
 
 Monomial_Wts = (6, 4, 2)
 R = PolynomialRing(QQ, names="s6, s4, s2", order=TermOrder('wdegrevlex', Monomial_Wts))
@@ -76,6 +77,39 @@ slist = singular_function("list")
 sintersect = singular_function("intersect")
 ssyz = singular_function("syz")
 
+@cached_function
+def load_min_resol_prim(i, parity):
+    fname = join(DATA_DIR, "str%s_%s_cand.sobj" % (i, parity))
+    return load(fname)
+
+@cached_function
+def load_cand_wts(i, parity):
+    l = load_min_resol_prim(i, parity)
+    return l[1]
+
+def min_resol_to_primitive(m_rel):
+    def to_string_monoms(l):
+        return [[to_string_monom_formal(p) for p in v] for v in l]
+    return ([to_string_monoms(l) for l in m_rel[0]],
+            m_rel[1],
+            (m_rel[2][0], m_rel[2][1], to_string_monom_formal(m_rel[2][2])))
+
+def to_string_monom_formal(pl):
+    pl = R(pl)
+    pl = pl.change_ring(ZZ)
+    return [((k[2], k[1], k[0]), to_unicode(a)) for (k, a) in pl.dict().items()]
+
+def to_unicode(a):
+    return unicode(str(a), 'utf-8')
+
+def save_min_resol_prim(i, parity):
+    data = load_wts_brs(i, parity)
+    resl = min_reol_maybe_with3gens(data)
+    resl_prim = min_resol_to_primitive(resl)
+    fname = join(DATA_DIR, "str%s_%s_cand.sobj" % (i, parity))
+    with open(fname, "w") as fp:
+        Pickler(fp, 2).dump(resl_prim)
+
 def min_reol_maybe_with3gens(data):
     forms = data.relatively_prime_3forms_maybe()
     d = data.brackets_dict
@@ -84,14 +118,21 @@ def min_reol_maybe_with3gens(data):
     F = FreeModule(R, 2)
     f, g, h = forms
     e0, e1 = F.gens()
+
     a = d[(g, h)]
     b = -d[(f, h)]
     c = d[(f, g)]
+
     f = e0 * c
+    g = e1 * c
     h = -(a * e0 + b * e1)
-    n = smodule(f, h)
-    idl = sideal(b)
-    m = squotient(n, idl)
+
+    if c.degree() > 0:
+        n = smodule(f, h)
+        idl = sideal(b)
+        m = squotient(n, idl)
+    else:
+        m = smodule(f, g)
     wts = data.weight_of_basis()
     mls = list(takewhile(lambda l: any(x != 0 for x in l), slist(smres(m, 0))))
     mls = [[list(v) for v in list(l)] for l in mls]
