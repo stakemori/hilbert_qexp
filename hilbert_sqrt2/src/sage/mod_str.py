@@ -6,12 +6,13 @@ from itertools import takewhile
 from sage.libs.singular.function import singular_function
 
 from sage.all import (FreeModule, PolynomialRing,
-                      TermOrder, cached_method, gcd, load, QQ, cached_function, ZZ)
+                      TermOrder, cached_method, gcd, load, QQ, cached_function, ZZ, QuadraticField)
 
 Monomial_Wts = (6, 4, 2)
 R = PolynomialRing(QQ, names="s6, s4, s2", order=TermOrder('wdegrevlex', Monomial_Wts))
 s6, s4, s2 = R.gens()
 DATA_DIR = "/home/sho/work/rust/hilbert_qexp/hilbert_sqrt2/data"
+
 
 def degree(p):
     p = R(p)
@@ -31,6 +32,7 @@ def to_pol_over_q(tpl):
 
 def degree_vec(v, wts):
     return next(int(degree(p) + w) for p, w in zip(v, wts) if p != 0)
+
 
 class FormsData(object):
 
@@ -69,6 +71,7 @@ class FormsData(object):
         c_deg = degree(c)
         return (f[1] - c_deg, g[1] - c_deg)
 
+
 smodule = singular_function("module")
 sideal = singular_function("ideal")
 squotient = singular_function("quotient")
@@ -77,15 +80,18 @@ slist = singular_function("list")
 sintersect = singular_function("intersect")
 ssyz = singular_function("syz")
 
+
 @cached_function
 def load_min_resol_prim(i, parity):
     fname = join(DATA_DIR, "str%s_%s_cand.sobj" % (i, parity))
     return load(fname)
 
+
 @cached_function
 def load_cand_wts(i, parity):
     l = load_min_resol_prim(i, parity)
     return l[1]
+
 
 def min_resol_to_primitive(m_rel):
     def to_string_monoms(l):
@@ -94,13 +100,16 @@ def min_resol_to_primitive(m_rel):
             m_rel[1],
             (m_rel[2][0], m_rel[2][1], to_string_monom_formal(m_rel[2][2])))
 
+
 def to_string_monom_formal(pl):
     pl = R(pl)
     pl = pl.change_ring(ZZ)
     return [((k[2], k[1], k[0]), to_unicode(a)) for (k, a) in pl.dict().items()]
 
+
 def to_unicode(a):
     return unicode(str(a), 'utf-8')
+
 
 def save_min_resol_prim(i, parity):
     data = load_wts_brs(i, parity)
@@ -109,6 +118,50 @@ def save_min_resol_prim(i, parity):
     fname = join(DATA_DIR, "str%s_%s_cand.sobj" % (i, parity))
     with open(fname, "w") as fp:
         Pickler(fp, 2).dump(resl_prim)
+
+
+def c_km2_1_01(k):
+    k1, k2 = [a % 4 for a in k]
+    if (k1, k2) in [(0, 0), (2, 2)]:
+        return 1
+    if k1 % 2 == 1 or k2 % 2 == 1:
+        return 0
+    if (k1, k2) in [(0, 2), (2, 0)]:
+        return -1
+
+
+def c_km2_1_11(k):
+    k1, k2 = [a % 3 for a in k]
+    if (k1, k2) in [(0, 0), (2, 2)]:
+        return 1
+    if k1 == 1 or k2 == 1:
+        return 0
+    if (k1, k2) in [(0, 2), (2, 0)]:
+        return -1
+
+
+def c_km2_1_sqrt2(k):
+    K = QuadraticField(2)
+    a = K.gen()
+    k1, k2 = k
+    k1 = k1 % 8
+    k2 = k2 % 8
+    k = (k1, k2)
+    if k in [(0, 0), (2, 2), (4, 4), (6, 6), (0, 6), (6, 0), (2, 4), (4, 2)]:
+        return 1
+    if k in [(3, 7), (7, 3)]:
+        return 2
+    if k in [(0, 7), (2, 3), (3, 0), (3, 6), (4, 3), (6, 7), (7, 2), (7, 4)]:
+        return a
+    if k1 in [1, 5] or k2 in [1, 5]:
+        return 0
+    if k in [(0, 3), (2, 7), (3, 2), (3, 4), (4, 7), (6, 3), (7, 0), (7, 6)]:
+        return -a
+    if k in [(3, 3), (7, 7)]:
+        return -2
+    else:
+        return -1
+
 
 def min_reol_maybe_with3gens(data):
     forms = data.relatively_prime_3forms_maybe()
@@ -142,3 +195,14 @@ def min_reol_maybe_with3gens(data):
         wts = wts_of_mls[i]
         wts_of_mls.append([degree_vec(v, wts) for v in l])
     return (mls, wts_of_mls, (forms[0], forms[1], c))
+
+
+def cuspforms_dimension(k):
+    '''
+    This returns the dimension of cusp forms if k = (k1, k2) and k1, k2 > 2.
+    '''
+    k1, k2 = k
+    return (ZZ((k1 - 1) * (k2 - 1)) / ZZ(24) +
+            ZZ(c_km2_1_01(k)) * 3/ZZ(8) +
+            ZZ(c_km2_1_11(k)) / ZZ(3) +
+            ZZ(c_km2_1_sqrt2(k)) / ZZ(4))
