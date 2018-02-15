@@ -67,3 +67,10 @@ Magmaの結果を信じるならば，weight (2, k) (kは3以上)のときの次
 
 #+RESULTS:
 : True
+
+#+BEGIN_SRC sage
+  all(check_hilbert_series(i, parity) for i in range(1, 21) for parity in [0, 1])
+#+END_SRC
+
+#+RESULTS:
+: True
