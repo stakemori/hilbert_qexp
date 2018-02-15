@@ -6,7 +6,8 @@ from itertools import takewhile
 from sage.libs.singular.function import singular_function
 
 from sage.all import (FreeModule, PolynomialRing,
-                      TermOrder, cached_method, gcd, load, QQ, cached_function, ZZ, QuadraticField)
+                      TermOrder, cached_method, gcd, load, QQ, cached_function, ZZ, QuadraticField,
+                      PowerSeriesRing, O, is_even)
 
 Monomial_Wts = (6, 4, 2)
 R = PolynomialRing(QQ, names="s6, s4, s2", order=TermOrder('wdegrevlex', Monomial_Wts))
@@ -206,3 +207,34 @@ def cuspforms_dimension(k):
             ZZ(c_km2_1_01(k)) * 3/ZZ(8) +
             ZZ(c_km2_1_11(k)) / ZZ(3) +
             ZZ(c_km2_1_sqrt2(k)) / ZZ(4))
+
+
+def hilbert_series_using_dimension_formula(i, parity, prec=10):
+    ps = PowerSeriesRing(QQ, names='t', default_prec=prec + 1)
+    t = ps.gen()
+    return (sum(cuspforms_dimension((a, a + 2 * i)) * t**a for a in range(2, prec + 1)
+                if is_even(a + parity)) +
+            O(t**(prec + 1)))
+
+
+def hilbert_series_using_cand_wts(i, parity, prec=None):
+    wts = load_cand_wts(i, parity)
+    if prec is None:
+        prec = max(wts[0])
+    ps = PowerSeriesRing(QQ, names='t', default_prec=prec + 1)
+    t = ps.gen()
+    num = sum(t**a for a in wts[0])
+    if len(wts) > 1:
+        num -= sum(t**a for a in wts[1])
+    dnm = (1 - t**2) * (1 - t**4) * (1 - t**6)
+    return num / dnm
+
+
+def check_hilbert_series(i, parity):
+    '''
+    This assumes the dimension formula is true when k = (2, a) with a > 2.
+    '''
+    h1 = hilbert_series_using_cand_wts(i, parity)
+    prec = h1.prec()
+    h2 = hilbert_series_using_dimension_formula(i, parity, prec=prec + 1)
+    return h1 == h2
