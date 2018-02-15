@@ -236,7 +236,7 @@ where
         let i = i_parity.0;
         let parity = i_parity.1;
         println!("{}, {}", i, parity);
-        let prec = (2 * i + 6) / 5 + 10;
+        let prec = (2 * i + 6) / 5 + 5;
         let forms_w_monoms = mixed_weight_forms(i, !is_even!(parity), prec, len);
 
         {
