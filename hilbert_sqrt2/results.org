@@ -60,7 +60,7 @@
 
 #+RESULTS:
 
-Magmaの結果を信じるならば，weight (2, k) (kは3以上)のときの次元公式は正しい．
+If we trust Magma, then the dimension formula for (2, k) (k is greater than or equal to 3) is true.
 #+BEGIN_SRC sage
   all(cuspforms_dimension((2, 2 + 2*i)) == d for i, d in dim_weight2_cusp_forms)
 #+END_SRC
