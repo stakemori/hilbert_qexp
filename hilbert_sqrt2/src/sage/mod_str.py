@@ -200,7 +200,8 @@ def min_reol_maybe_with3gens(data):
 
 def cuspforms_dimension(k):
     '''
-    This returns the dimension of cusp forms if k = (k1, k2) and k1, k2 > 2.
+    This returns the dimension of cusp forms if k = (k1, k2) and k1, k2 >= 2 and
+    (k1, k2) != (2, 2).
     '''
     k1, k2 = k
     return (ZZ((k1 - 1) * (k2 - 1)) / ZZ(24) +
@@ -231,9 +232,6 @@ def hilbert_series_using_cand_wts(i, parity, prec=None):
 
 
 def check_hilbert_series(i, parity):
-    '''
-    This assumes the dimension formula is true when k = (2, a) with a > 2.
-    '''
     h1 = hilbert_series_using_cand_wts(i, parity)
     prec = h1.prec()
     h2 = hilbert_series_using_dimension_formula(i, parity, prec=prec + 1)
