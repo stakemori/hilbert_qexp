@@ -1,5 +1,5 @@
-extern crate hilbert_sqrt2;
 extern crate hilbert_qexp;
+extern crate hilbert_sqrt2;
 
 mod parallel {
     use hilbert_sqrt2::parallel_wt::*;
@@ -91,7 +91,6 @@ mod structure {
         println!("{:?}", pl01);
         println!("{:?}", pl02);
         println!("{:?}", pl12);
-
     }
 
     #[test]

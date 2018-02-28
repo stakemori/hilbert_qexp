@@ -1,7 +1,7 @@
-#[macro_use]
-extern crate hilbert_qexp;
 extern crate flint;
 extern crate gmp;
+#[macro_use]
+extern crate hilbert_qexp;
 
 extern crate serde;
 extern crate serde_pickle;

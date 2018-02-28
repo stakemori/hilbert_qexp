@@ -1,4 +1,4 @@
-use hilbert_qexp::elements::{HmfGen, div_mut};
+use hilbert_qexp::elements::{div_mut, HmfGen};
 use hilbert_qexp::bignum::BigNumber;
 use parallel_wt::*;
 use flint::fmpq::Fmpq;
@@ -20,7 +20,6 @@ where
     res.weight = Some((k2, k1));
 }
 
-
 fn proj_s9_part<T>(f: &HmfGen<T>, s9: &HmfGen<T>) -> HmfGen<T>
 where
     T: BigNumber + Clone + ShrAssign<u64>,
@@ -34,7 +33,6 @@ where
     tmp1 >>= 1_u64;
     tmp1
 }
-
 
 pub fn bracket_inner_prod<T>(f: &HmfGen<T>, g: &HmfGen<T>) -> HmfGen<T>
 where

@@ -1,5 +1,5 @@
 use hilbert_qexp::diff_op::rankin_cohen;
-use hilbert_qexp::elements::{HmfGen, relations_over_q, div_mut};
+use hilbert_qexp::elements::{div_mut, relations_over_q, HmfGen};
 use hilbert_qexp::bignum::Sqrt2Q;
 use hilbert_qexp::bignum::RealQuadElement;
 use parallel_wt::*;
@@ -81,7 +81,6 @@ pub fn r_elt_as_pol_over_q(f: &HmfGen<Fmpq>) -> Option<Vec<(MonomFormal, Fmpq)>>
         None
     }
 }
-
 
 pub fn three_forms_a1_0(prec: usize) -> Vec<HmfGen<Sqrt2Q>> {
     let s2 = Into::<HmfGen<Sqrt2Q>>::into(&s2_form(prec));
@@ -275,8 +274,8 @@ where
                         .collect::<Vec<_>>()
                 })
                 .collect::<Vec<_>>();
-            let ref mut br_file = File::create(format!("./data/str{}_{}_brs.sobj", i, parity))
-                .unwrap();
+            let ref mut br_file =
+                File::create(format!("./data/str{}_{}_brs.sobj", i, parity)).unwrap();
             save_as_pickle(&brs, br_file);
         }
     }

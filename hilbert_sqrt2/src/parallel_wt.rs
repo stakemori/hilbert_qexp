@@ -1,5 +1,5 @@
 use hilbert_qexp::eisenstein::eisenstein_series_from_lvals;
-use hilbert_qexp::elements::{HmfGen, square_root_mut};
+use hilbert_qexp::elements::{square_root_mut, HmfGen};
 use flint::fmpq::Fmpq;
 use flint::fmpz::Fmpz;
 
