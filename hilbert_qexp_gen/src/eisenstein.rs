@@ -26,7 +26,11 @@ fn content(u: i64, v: usize, m: u64) -> u64 {
 
 #[allow(dead_code)]
 fn disc(m: u64) -> u64 {
-    if is_1mod4!(m) { m } else { 4 * m }
+    if is_1mod4!(m) {
+        m
+    } else {
+        4 * m
+    }
 }
 
 /// This assumes narrow class number of Q(sqrt{m}) is one. `l_val_num` and
@@ -113,7 +117,7 @@ pub fn eisenstein_series_from_lvals(
             }
         }
     });
-    res.weight = Some((k as usize , k as usize));
+    res.weight = Some((k as usize, k as usize));
     res
 }
 

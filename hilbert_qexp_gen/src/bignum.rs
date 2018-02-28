@@ -1,7 +1,7 @@
-use libc::{c_ulong, c_long};
+use libc::{c_long, c_ulong};
 use flint::fmpz::Fmpz;
 use std::fmt;
-use std::ops::{AddAssign, SubAssign, ShlAssign, ShrAssign, MulAssign, DivAssign};
+use std::ops::{AddAssign, DivAssign, MulAssign, ShlAssign, ShrAssign, SubAssign};
 use std;
 use flint::fmpz_poly::FmpzPoly;
 use flint::fmpq::Fmpq;
@@ -50,7 +50,6 @@ pub trait BigNumber {
                 n.square_g(tmp_elt, tmp);
             }
         }
-
     }
 }
 
@@ -94,7 +93,11 @@ impl BigNumber for Fmpq {
     }
 
     fn is_multiple_of_g(&self, x: &Self, _tmpelt: &mut Self, _tmp: &mut Fmpq) -> bool {
-        if x.is_zero() { self.is_zero() } else { true }
+        if x.is_zero() {
+            self.is_zero()
+        } else {
+            true
+        }
     }
 
     fn new_g() -> Self {
@@ -279,7 +282,11 @@ impl Sqrt5Z {
         let a = Fmpz::gcd(&self.rt, &self.ir);
         let mut b = &self.rt - &self.ir;
         b /= &a;
-        if !b.is_even() { a >> 1 } else { a }
+        if !b.is_even() {
+            a >> 1
+        } else {
+            a
+        }
     }
 }
 
@@ -502,7 +509,6 @@ impl PartialEq for Sqrt5Z {
     }
 }
 
-
 macro_rules! impl_quad_elt {
     ($m: expr, $name: ident) =>  {
         #[derive(Clone)]

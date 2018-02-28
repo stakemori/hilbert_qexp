@@ -1,6 +1,6 @@
-extern crate libc;
 extern crate flint;
 extern crate gmp;
+extern crate libc;
 
 #[macro_use]
 pub mod elements;

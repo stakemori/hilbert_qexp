@@ -1,10 +1,10 @@
-extern crate hilbert_qexp;
 extern crate flint;
+extern crate hilbert_qexp;
 
 mod sqrt5 {
     use hilbert_qexp::eisenstein::eisenstein_series_from_lvals;
     use flint::fmpq::Fmpq;
-    use hilbert_qexp::elements::{HmfGen, square_root_mut};
+    use hilbert_qexp::elements::{square_root_mut, HmfGen};
     use hilbert_qexp::misc::PowGen;
     use hilbert_qexp::diff_op::rankin_cohen;
     use hilbert_qexp::bignum::Sqrt5Q;
@@ -80,7 +80,7 @@ mod sqrt5 {
 mod eisen_sqrt2 {
     use hilbert_qexp::eisenstein::eisenstein_series_from_lvals;
     use flint::fmpq::Fmpq;
-    use hilbert_qexp::elements::{HmfGen, relations_over_q};
+    use hilbert_qexp::elements::{relations_over_q, HmfGen};
     // use hilbert_qexp::misc::PowGen;
 
     fn eisenstein_sqrt2(k: u64, prec: usize) -> HmfGen<Fmpq> {

@@ -1,9 +1,9 @@
 use std;
 use std::fmt;
-use misc::{pow_mut, PowGen, int_sqrt};
-use libc::{c_ulong, c_long};
-use std::ops::{AddAssign, MulAssign, DivAssign, SubAssign, ShlAssign, ShrAssign, Mul, Sub, Neg,
-               Add};
+use misc::{int_sqrt, pow_mut, PowGen};
+use libc::{c_long, c_ulong};
+use std::ops::{Add, AddAssign, DivAssign, Mul, MulAssign, Neg, ShlAssign, ShrAssign, Sub,
+               SubAssign};
 use std::cmp::min;
 use bignum::{BigNumber, RealQuadElement};
 
@@ -36,7 +36,6 @@ pub struct HmfGen<T> {
 macro_rules! is_1mod4 {
     ($expr: expr) => {($expr) & 0b11 == 1}
 }
-
 
 #[macro_export]
 macro_rules! is_even {
@@ -535,7 +534,11 @@ where
                 break;
             }
         });
-        if a { &res >> 1 } else { res }
+        if a {
+            &res >> 1
+        } else {
+            res
+        }
     }
 }
 
@@ -758,7 +761,6 @@ where
     }
 }
 
-
 /// set (v, u) th F.C. of fc_vec1 * fc_vec2 to a.
 /// This function take care the case when fc_vec2 is sparse.
 fn _mul_mut_tmp<T>(
@@ -876,7 +878,6 @@ where
     }
 }
 
-
 impl<T, S> ShrAssign<S> for HmfGen<T>
 where
     T: BigNumber + ShrAssign<S>,
@@ -897,9 +898,9 @@ where
     for (v, &bd) in f.u_bds.vec.iter().enumerate() {
         let bd = bd as i64;
         let v_i64 = v as i64;
-        for u in (-bd..(bd + 1)).rev().filter(|&x| {
-            !is_1mod4!(f.m) || is_even!(x + v_i64)
-        })
+        for u in (-bd..(bd + 1))
+            .rev()
+            .filter(|&x| !is_1mod4!(f.m) || is_even!(x + v_i64))
         {
             if !f.fcvec.fc_ref(v, u, bd).is_zero_g() {
                 return Some((v, u, f.fcvec.fc_ref(v, u, bd)));
@@ -1041,7 +1042,6 @@ where
         fcvec::shr_assign(&mut res.fcvec.vec[v - v_init], v - v_init, &u_bds, 1, res.m);
     }
 }
-
 
 // Todo: make the denominator small.
 pub fn div_mut_with_denom<T>(res: &mut HmfGen<T>, f: &HmfGen<T>, g: &HmfGen<T>, check: bool) -> T

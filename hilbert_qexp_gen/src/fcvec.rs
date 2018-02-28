@@ -1,7 +1,6 @@
 use elements::UBounds;
-use std::ops::{SubAssign, ShrAssign};
+use std::ops::{ShrAssign, SubAssign};
 use bignum::BigNumber;
-
 
 pub fn shr_assign<T>(f_vec: &mut Vec<T>, v: usize, u_bds: &UBounds, a: u64, m: u64)
 where
@@ -62,9 +61,8 @@ pub fn mul_mut<T>(
     // naive implementation of polynomial multiplication
     // i -> i - bd_g
     for i in (0..(2 * bd_g + 1)).filter(|&x| !is_1mod4!(m) || is_even!(v_g + x + bd_g + parity_g)) {
-        for j in (0..(2 * bd_h + 1)).filter(|&x| {
-            !is_1mod4!(m) || is_even!(v_h + x + bd_h + parity_h)
-        })
+        for j in
+            (0..(2 * bd_h + 1)).filter(|&x| !is_1mod4!(m) || is_even!(v_h + x + bd_h + parity_h))
         {
             f_vec[gap_gh + i + j - bd_g - bd_h].addmul_mut_g(
                 &g_vec[gap_g + i - bd_g],
@@ -119,7 +117,6 @@ pub fn div_mut<T>(
                 &h_vec[(gap_h + n + m - i) as usize],
                 &mut tmp,
             );
-
         }
         h_vec[(gap_h + m) as usize].set_g(&tmp_elt);
         h_vec[(gap_h + m) as usize].set_divexact_g(&g_vec[(gap_g + n) as usize], &mut tmp);

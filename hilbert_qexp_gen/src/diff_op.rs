@@ -2,7 +2,7 @@ use elements::HmfGen;
 use bignum::{BigNumber, RealQuadElement};
 use flint::fmpq::Fmpq;
 use flint::fmpz::Fmpz;
-use std::ops::{MulAssign, AddAssign};
+use std::ops::{AddAssign, MulAssign};
 
 fn diff_mut<T>(res: &mut HmfGen<T>, expt: (usize, usize), f: &HmfGen<T>)
 where
